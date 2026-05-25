@@ -1,0 +1,22 @@
+{
+  "id": "opentofu",
+  "version": "1.0.0",
+  "name": "OpenTofu",
+  "description": "Installs the OpenTofu binary (open-source Terraform fork) from the official release, optionally with tflint.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/opentofu",
+  "options": {
+    "version": {
+      "type": "string",
+      "default": "latest",
+      "description": "OpenTofu version (e.g. '1.8.4'). 'latest' fetches the most recent GitHub release."
+    },
+    "installTflint": {
+      "type": "boolean",
+      "default": true,
+      "description": "Install tflint."
+    }
+  },
+  "installsAfter": [
+    "ghcr.io/devcontainers/features/common-utils"
+  ]
+}

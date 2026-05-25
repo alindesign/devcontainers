@@ -1,0 +1,12 @@
+{
+  "skip-mongo-and-redis": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "remoteUser": "vscode",
+    "features": {
+      "db-tooling": {
+        "skipMongosh": true,
+        "skipRedis": true
+      }
+    }
+  }
+}

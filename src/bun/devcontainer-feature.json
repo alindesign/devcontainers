@@ -1,0 +1,17 @@
+{
+  "id": "bun",
+  "version": "1.0.0",
+  "name": "Bun",
+  "description": "Installs the Bun runtime + package manager from the official installer. Standalone — no Node.js required.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/bun",
+  "options": {
+    "version": {
+      "type": "string",
+      "default": "latest",
+      "description": "Bun version. 'latest' tracks the stable channel; 'canary' tracks nightly; otherwise a tag like '1.1.34'."
+    }
+  },
+  "installsAfter": [
+    "ghcr.io/devcontainers/features/common-utils"
+  ]
+}

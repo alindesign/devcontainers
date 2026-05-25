@@ -1,0 +1,37 @@
+{
+  "id": "kubectl",
+  "version": "1.0.0",
+  "name": "Kubernetes CLI tooling",
+  "description": "kubectl + helm + k9s + kubectx/kubens. Optional skipX flags for each. Mount your kubeconfig from the host in your devcontainer.json (see README).",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/kubectl",
+  "options": {
+    "kubectlVersion": {
+      "type": "string",
+      "default": "latest",
+      "description": "kubectl version. 'latest' fetches the current stable from dl.k8s.io."
+    },
+    "helmVersion": {
+      "type": "string",
+      "default": "latest",
+      "description": "Helm version. 'latest' tracks GitHub releases."
+    },
+    "installHelm": {
+      "type": "boolean",
+      "default": true,
+      "description": "Install Helm."
+    },
+    "installK9s": {
+      "type": "boolean",
+      "default": true,
+      "description": "Install k9s TUI."
+    },
+    "installKubectx": {
+      "type": "boolean",
+      "default": true,
+      "description": "Install kubectx + kubens."
+    }
+  },
+  "installsAfter": [
+    "ghcr.io/devcontainers/features/common-utils"
+  ]
+}
