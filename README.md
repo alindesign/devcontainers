@@ -63,7 +63,13 @@ devcontainer features test --features dotfiles --base-image mcr.microsoft.com/de
 devcontainer templates apply -t ./templates/src/node -w /tmp/scratch
 ```
 
-Requires the [`devcontainer` CLI](https://github.com/devcontainers/cli): `brew install devcontainer` (already in `../dotfiles/dot_Brewfile`).
+Requires the [`devcontainer` CLI](https://github.com/devcontainers/cli):
+
+```bash
+brew install devcontainer
+# or
+npm install -g @devcontainers/cli
+```
 
 ## Release
 
