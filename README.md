@@ -15,11 +15,32 @@ Reusable [Dev Container Features](https://containers.dev/implementors/features/)
 | [ocaml](src/ocaml) | `ghcr.io/alindesign/features/ocaml:1` | OCaml via opam (mise has no first-class OCaml plugin) |
 | [python](src/python) | `ghcr.io/alindesign/features/python:1` | Python via mise + uv (default) / poetry / pip |
 | [ansible](src/ansible) | `ghcr.io/alindesign/features/ansible:1` | Ansible (+ ansible-lint) via uv tool. Auto-bootstraps Python. |
-| [claude](src/claude) | `ghcr.io/alindesign/features/claude:1` | Claude Code CLI via npm, mounts `~/.claude` from host |
-| [aws-cli](src/aws-cli) | `ghcr.io/alindesign/features/aws-cli:1` | AWS CLI v2 from the official installer, mounts `~/.aws` from host |
-| [gcloud](src/gcloud) | `ghcr.io/alindesign/features/gcloud:1` | gcloud CLI via Google apt repo, mounts `~/.config/gcloud` from host |
+| [bun](src/bun) | `ghcr.io/alindesign/features/bun:1` | Bun runtime + package manager (standalone, no Node required) |
+| [docker-in-docker](src/docker-in-docker) | `ghcr.io/alindesign/features/docker-in-docker:1` | Docker Engine + buildx + Compose v2 |
+| [kubectl](src/kubectl) | `ghcr.io/alindesign/features/kubectl:1` | kubectl + helm + k9s + kubectx/kubens (each skippable) |
+| [opentofu](src/opentofu) | `ghcr.io/alindesign/features/opentofu:1` | OpenTofu + tflint (with `terraform → tofu` alias) |
+| [db-tooling](src/db-tooling) | `ghcr.io/alindesign/features/db-tooling:1` | CLI clients: psql + mysql + redis-cli + mongosh (each skippable) |
+| [secrets](src/secrets) | `ghcr.io/alindesign/features/secrets:1` | sops + age + pass for secret management |
+| [claude](src/claude) | `ghcr.io/alindesign/features/claude:1` | Claude Code CLI via npm. Bootstraps Node if missing. |
+| [aws-cli](src/aws-cli) | `ghcr.io/alindesign/features/aws-cli:1` | AWS CLI v2 from the official installer |
+| [gcloud](src/gcloud) | `ghcr.io/alindesign/features/gcloud:1` | gcloud CLI via Google apt repo (with components option) |
 
-The mise-based features (`node`, `go`, `rust`, `java`) all auto-bootstrap mise if you don't add the `mise` feature explicitly — they share the same `MISE_DATA_DIR` so adding more is incremental and cheap.
+The mise-based features (`node`, `go`, `java`, `python`) all auto-bootstrap mise if you don't add the `mise` feature explicitly — they share the same `MISE_DATA_DIR` so adding more is incremental and cheap. `rust` uses rustup directly with system-wide `RUSTUP_HOME`/`CARGO_HOME`.
+
+## Pre-built base image
+
+If you find yourself always using `dotfiles` + `mise` together, skip the layer rebuild by using the pre-baked image:
+
+```jsonc
+{
+  "image": "ghcr.io/alindesign/devcontainer-base:latest",
+  "features": {
+    "ghcr.io/alindesign/features/node:2": { "packageManager": "pnpm" }
+  }
+}
+```
+
+See [images/base/](images/base) for what's included.
 
 ## Templates
 
@@ -34,6 +55,9 @@ The mise-based features (`node`, `go`, `rust`, `java`) all auto-bootstrap mise i
 | [ansible](templates/src/ansible) | `ghcr.io/alindesign/templates/ansible` | Ubuntu + `dotfiles` + `python` (uv) + `ansible` + `ansible-lint` |
 | [claude-dev](templates/src/claude-dev) | `ghcr.io/alindesign/templates/claude-dev` | Ubuntu + `dotfiles` + `node` + `claude` + mounts `~/.claude` + `~/.claude.json` + macOS Keychain dump |
 | [cloud-ops](templates/src/cloud-ops) | `ghcr.io/alindesign/templates/cloud-ops` | Ubuntu + `dotfiles` + `aws-cli` + `gcloud` + mounts `~/.aws` + `~/.config/gcloud` |
+| [devops](templates/src/devops) | `ghcr.io/alindesign/templates/devops` | Full IaC toolbox: `dotfiles` + `python` + `ansible` + `aws-cli` + `gcloud` + `kubectl` + `opentofu` + `secrets` + mounts |
+| [k8s](templates/src/k8s) | `ghcr.io/alindesign/templates/k8s` | Ubuntu + `dotfiles` + `go` + `kubectl` + `docker-in-docker` + mount `~/.kube` |
+| [data-science](templates/src/data-science) | `ghcr.io/alindesign/templates/data-science` | Ubuntu + `dotfiles` + `python` (uv) + JupyterLab + DuckDB + db-tooling |
 
 ## Use in a new project
 
