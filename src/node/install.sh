@@ -116,8 +116,20 @@ for bin in node npm npx corepack pnpm pnpx yarn; do
 done
 
 # Permissions: let the remote user use & install new node versions.
+# setgid on directories so new files inherit the group, then u/g rwX everywhere.
 chown -R "${USERNAME}:${USER_GROUP}" "${NVM_DIR}"
-chmod -R g+rwX "${NVM_DIR}"
+chmod -R u+rwX,g+rwX,o+rX "${NVM_DIR}"
+find "${NVM_DIR}" -type d -exec chmod g+s {} +
+
+# Sanity check: the remote user must be able to write to NVM_DIR so they can
+# install additional Node versions. Fail the build if not — this is silently
+# load-bearing for nvm install/use to work post-build.
+if ! sudo -u "${USERNAME}" test -w "${NVM_DIR}"; then
+  echo "node feature: ERROR — ${USERNAME} cannot write to ${NVM_DIR}" >&2
+  ls -ld "${NVM_DIR}"
+  id "${USERNAME}"
+  exit 1
+fi
 
 # --- per-user shell hooks ---------------------------------------------------
 ensure_line() {
