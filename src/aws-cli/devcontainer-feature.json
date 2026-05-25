@@ -11,13 +11,6 @@
       "description": "AWS CLI v2 version. 'latest' or a specific version like '2.18.0'."
     }
   },
-  "mounts": [
-    {
-      "source": "${localEnv:HOME}/.aws",
-      "target": "/home/vscode/.aws",
-      "type": "bind"
-    }
-  ],
   "installsAfter": [
     "ghcr.io/devcontainers/features/common-utils"
   ]

@@ -10,21 +10,17 @@ Installs [Anthropic's Claude Code CLI](https://docs.claude.com/en/docs/claude-co
 | --- | --- | --- | --- |
 | `version` | string | `latest` | npm version spec for `@anthropic-ai/claude-code`. |
 
-## Host mount
+## Host mount (recommended)
 
-The feature mounts `~/.claude` from the host into `/home/vscode/.claude` so that:
-
-- the login session you have on the host carries into the container
-- `claude` reads/writes the same conversation history and settings as your host install
-- credentials live on the host, not in the image
-
-If your remote user is not `vscode`, override the mount in your project `devcontainer.json`:
+Add this to your `devcontainer.json` so your host login carries into the container, claude reads/writes the same history/settings, and credentials stay on the host (not baked into the image):
 
 ```jsonc
 "mounts": [
-  { "source": "${localEnv:HOME}/.claude", "target": "/home/myuser/.claude", "type": "bind" }
+  { "source": "${localEnv:HOME}/.claude", "target": "/home/vscode/.claude", "type": "bind" }
 ]
 ```
+
+This isn't declared in the feature manifest because `bind` mounts fail at startup if the host directory doesn't exist (which would break CI runners and any host without a prior `claude` login). Adding it manually in your project's `devcontainer.json` is opt-in.
 
 ## Use
 

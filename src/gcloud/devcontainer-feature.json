@@ -11,13 +11,6 @@
       "description": "Space-separated additional gcloud components to install (e.g. 'kubectl gke-gcloud-auth-plugin terraform-tools')."
     }
   },
-  "mounts": [
-    {
-      "source": "${localEnv:HOME}/.config/gcloud",
-      "target": "/home/vscode/.config/gcloud",
-      "type": "bind"
-    }
-  ],
   "installsAfter": [
     "ghcr.io/devcontainers/features/common-utils"
   ]

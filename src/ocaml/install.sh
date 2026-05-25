@@ -53,21 +53,27 @@ opam --version
 # --- shared opam root -------------------------------------------------------
 export OPAMROOT="/usr/local/share/opam"
 install -d -m 0775 "${OPAMROOT}"
+# opam init writes into OPAMROOT/opam-init/... as the invoking user, so the
+# dir must already be writable by the remote user before we drop privileges.
+chown -R "${USERNAME}:${USER_GROUP}" "${OPAMROOT}"
+chmod -R a+rwX "${OPAMROOT}"
+
+USER_HOME="$(getent passwd "${USERNAME}" | cut -d: -f6)"
 
 # Initialize as the remote user so the switch is owned correctly.
 sudo -u "${USERNAME}" \
-  HOME="$(getent passwd "${USERNAME}" | cut -d: -f6)" \
+  HOME="${USER_HOME}" \
   OPAMROOT="${OPAMROOT}" \
   opam init --disable-sandboxing --bare --yes --no-setup
 
 sudo -u "${USERNAME}" \
-  HOME="$(getent passwd "${USERNAME}" | cut -d: -f6)" \
+  HOME="${USER_HOME}" \
   OPAMROOT="${OPAMROOT}" \
   opam switch create default "ocaml-base-compiler.${OCAML_VERSION}" --yes
 
 if [ "${INSTALL_DUNE_LSP}" = "true" ]; then
   sudo -u "${USERNAME}" \
-    HOME="$(getent passwd "${USERNAME}" | cut -d: -f6)" \
+    HOME="${USER_HOME}" \
     OPAMROOT="${OPAMROOT}" \
     bash -c 'eval "$(opam env --switch=default)"; opam install -y dune ocaml-lsp-server ocamlformat'
 fi

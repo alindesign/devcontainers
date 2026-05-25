@@ -8,15 +8,17 @@ Installs [Google Cloud CLI](https://cloud.google.com/sdk/docs/install) via Googl
 | --- | --- | --- | --- |
 | `installComponents` | string | `""` | Space-separated components (e.g. `kubectl gke-gcloud-auth-plugin`). Installed as `google-cloud-cli-<name>` apt packages where available, falling back to `gcloud components install`. |
 
-## Host mount
+## Host mount (recommended)
 
-Mounts `~/.config/gcloud` from the host into `/home/vscode/.config/gcloud` so:
+Add this to your `devcontainer.json` so host login, ADC, and project/region settings are reused inside the container:
 
-- `gcloud auth login` sessions on the host carry into the container
-- ADC (Application Default Credentials) work without re-auth
-- project/region/account settings persist across rebuilds
+```jsonc
+"mounts": [
+  { "source": "${localEnv:HOME}/.config/gcloud", "target": "/home/vscode/.config/gcloud", "type": "bind" }
+]
+```
 
-If your remote user is not `vscode`, override the mount in your project `devcontainer.json`.
+Not declared in the feature manifest because the bind mount would fail at container startup on hosts without `~/.config/gcloud` (CI runners, fresh machines). Adding it in your project devcontainer is opt-in.
 
 ## Use
 

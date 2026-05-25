@@ -72,12 +72,13 @@ esac
 mise use --global "${MISE_NODE_SPEC}"
 mise install "${MISE_NODE_SPEC}"
 
-NODE_BIN_DIR="$(mise where "${MISE_NODE_SPEC}")/bin"
-if [ ! -x "${NODE_BIN_DIR}/node" ]; then
-  echo "node feature: ERROR — could not resolve installed Node bin dir (${NODE_BIN_DIR})" >&2
+NODE_BIN="$(mise which node)"
+if [ ! -x "${NODE_BIN}" ]; then
+  echo "node feature: ERROR — mise could not resolve 'node' binary" >&2
   exit 1
 fi
-echo "node feature: node $("${NODE_BIN_DIR}/node" --version) installed via mise"
+NODE_BIN_DIR="$(dirname "${NODE_BIN}")"
+echo "node feature: node $("${NODE_BIN}" --version) installed via mise"
 
 # --- package manager via corepack ------------------------------------------
 # Only enable shims for the requested package manager so PATH stays
@@ -109,9 +110,23 @@ case "${PACKAGE_MANAGER}" in
     ;;
 esac
 
-# --- expose to PATH for non-login shells (RUN steps, CI) --------------------
+# Refresh mise shims so npm/pnpm/yarn/corepack are picked up under
+# ${MISE_DATA_DIR}/shims, then put that dir on the global PATH so non-login
+# shells (RUN steps, scripts, CI) see them. Avoid symlinking the real mise
+# install binaries directly — npm resolves its lib relative to argv[0] and
+# bypassing the shim breaks `npm --version`.
+mise reshim
+SHIMS_DIR="${MISE_DATA_DIR}/shims"
+cat > /etc/profile.d/mise.sh <<EOF
+export MISE_DATA_DIR="${MISE_DATA_DIR}"
+export PATH="${SHIMS_DIR}:\$PATH"
+EOF
+chmod 0644 /etc/profile.d/mise.sh
+
+# Also drop convenience symlinks for the most-used binaries so that `command
+# -v node` works even before /etc/profile is sourced (e.g. minimal sh -c).
 for bin in node npm npx corepack pnpm pnpx yarn; do
-  src="${NODE_BIN_DIR}/${bin}"
+  src="${SHIMS_DIR}/${bin}"
   if [ -x "${src}" ]; then
     ln -sf "${src}" "/usr/local/bin/${bin}"
   fi

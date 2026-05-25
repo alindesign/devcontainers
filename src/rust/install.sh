@@ -52,28 +52,40 @@ RUST_SPEC="rust@${RUST_VERSION}"
 mise use --global "${RUST_SPEC}"
 mise install "${RUST_SPEC}"
 
-RUST_BIN_DIR="$(mise where "${RUST_SPEC}")/bin"
-if [ ! -x "${RUST_BIN_DIR}/rustc" ]; then
-  echo "rust feature: ERROR — could not resolve Rust bin dir (${RUST_BIN_DIR})" >&2
+# mise's rust plugin uses rustup under the hood and puts the real binaries in
+# the rustup toolchain dir, not under `mise where`. Resolve via `mise which`.
+RUSTC_BIN="$(mise which rustc 2>/dev/null || true)"
+if [ -z "${RUSTC_BIN}" ] || [ ! -x "${RUSTC_BIN}" ]; then
+  echo "rust feature: ERROR — mise could not resolve 'rustc' binary" >&2
   exit 1
 fi
-echo "rust feature: $("${RUST_BIN_DIR}/rustc" --version)"
+RUST_BIN_DIR="$(dirname "${RUSTC_BIN}")"
+echo "rust feature: $("${RUSTC_BIN}" --version)"
 
 # --- rustup components / targets --------------------------------------------
-if command -v "${RUST_BIN_DIR}/rustup" >/dev/null 2>&1; then
+RUSTUP_BIN="$(mise which rustup 2>/dev/null || true)"
+if [ -n "${RUSTUP_BIN}" ] && [ -x "${RUSTUP_BIN}" ]; then
   if [ -n "${COMPONENTS}" ]; then
     # shellcheck disable=SC2086
-    "${RUST_BIN_DIR}/rustup" component add ${COMPONENTS} || true
+    "${RUSTUP_BIN}" component add ${COMPONENTS} || true
   fi
   if [ -n "${TARGETS}" ]; then
     # shellcheck disable=SC2086
-    "${RUST_BIN_DIR}/rustup" target add ${TARGETS} || true
+    "${RUSTUP_BIN}" target add ${TARGETS} || true
   fi
 fi
 
-# --- symlinks ---------------------------------------------------------------
+# --- mise shims on PATH (handles toolchain switches cleanly) ----------------
+mise reshim
+SHIMS_DIR="${MISE_DATA_DIR}/shims"
+cat > /etc/profile.d/mise.sh <<EOF
+export MISE_DATA_DIR="${MISE_DATA_DIR}"
+export PATH="${SHIMS_DIR}:\$PATH"
+EOF
+chmod 0644 /etc/profile.d/mise.sh
+
 for bin in rustc cargo rustup rustfmt clippy-driver cargo-clippy rust-analyzer; do
-  src="${RUST_BIN_DIR}/${bin}"
+  src="${SHIMS_DIR}/${bin}"
   [ -x "${src}" ] && ln -sf "${src}" "/usr/local/bin/${bin}"
 done
 

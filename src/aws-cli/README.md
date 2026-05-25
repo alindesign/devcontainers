@@ -8,15 +8,17 @@ Installs [AWS CLI v2](https://docs.aws.amazon.com/cli/latest/userguide/getting-s
 | --- | --- | --- | --- |
 | `version` | string | `latest` | `latest` or a pinned version like `2.18.0`. |
 
-## Host mount
+## Host mount (recommended)
 
-Mounts `~/.aws` from the host into `/home/vscode/.aws` so that:
+Add this to your `devcontainer.json` so host profiles, SSO sessions, and credentials are reused inside the container:
 
-- `aws configure` profiles you set up on the host are reused inside the container
-- SSO sessions (`aws sso login`) and refresh tokens persist across rebuilds
-- credentials live on the host filesystem, not in the image
+```jsonc
+"mounts": [
+  { "source": "${localEnv:HOME}/.aws", "target": "/home/vscode/.aws", "type": "bind" }
+]
+```
 
-If your remote user is not `vscode`, override the mount in your project `devcontainer.json`.
+Not declared in the feature manifest because the bind mount would fail at container startup on hosts without an `~/.aws` directory (CI runners, fresh machines). Adding it in your project devcontainer is opt-in.
 
 ## Use
 

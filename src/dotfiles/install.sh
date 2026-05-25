@@ -100,24 +100,23 @@ install_starship() {
   curl -fsSL https://starship.rs/install.sh | sh -s -- --yes --bin-dir /usr/local/bin
 }
 
+# Pinned versions — upstream installers query the GitHub API and hit
+# unauthenticated rate limits in CI runners; direct downloads avoid that.
+EZA_VERSION="0.20.10"
+ZOXIDE_VERSION="0.9.6"
+
 install_eza() {
   if command -v eza >/dev/null 2>&1; then return; fi
-  local url
-  url="$(curl -fsSL https://api.github.com/repos/eza-community/eza/releases/latest \
-    | jq -r --arg a "${ARCH_GNU}" '.assets[] | select(.name | endswith($a + ".tar.gz")) | .browser_download_url' \
-    | head -n1)"
-  if [ -z "${url}" ]; then
-    echo "dotfiles feature: failed to resolve eza release for ${ARCH_GNU}" >&2
-    return 1
-  fi
+  local url="https://github.com/eza-community/eza/releases/download/v${EZA_VERSION}/eza_${ARCH_GNU}.tar.gz"
   curl -fsSL "${url}" | tar -xz -C "${TMP}"
   install -m 0755 "${TMP}/eza" /usr/local/bin/eza
 }
 
 install_zoxide() {
   if command -v zoxide >/dev/null 2>&1; then return; fi
-  curl -fsSL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh \
-    | sh -s -- --bin-dir /usr/local/bin
+  local url="https://github.com/ajeetdsouza/zoxide/releases/download/v${ZOXIDE_VERSION}/zoxide-${ZOXIDE_VERSION}-${ARCH_MUSL}.tar.gz"
+  curl -fsSL "${url}" | tar -xz -C "${TMP}"
+  install -m 0755 "${TMP}/zoxide" /usr/local/bin/zoxide
 }
 
 install_starship

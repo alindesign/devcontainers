@@ -11,13 +11,6 @@
       "description": "Version of @anthropic-ai/claude-code to install via npm. Use 'latest' to track the latest release."
     }
   },
-  "mounts": [
-    {
-      "source": "${localEnv:HOME}/.claude",
-      "target": "/home/vscode/.claude",
-      "type": "bind"
-    }
-  ],
   "installsAfter": [
     "ghcr.io/devcontainers/features/common-utils",
     "ghcr.io/devcontainers/features/node"

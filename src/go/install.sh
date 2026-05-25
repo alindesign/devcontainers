@@ -51,16 +51,25 @@ GO_SPEC="go@${GO_VERSION}"
 mise use --global "${GO_SPEC}"
 mise install "${GO_SPEC}"
 
-GO_BIN_DIR="$(mise where "${GO_SPEC}")/bin"
-if [ ! -x "${GO_BIN_DIR}/go" ]; then
-  echo "go feature: ERROR — could not resolve Go bin dir (${GO_BIN_DIR})" >&2
+GO_BIN="$(mise which go 2>/dev/null || true)"
+if [ -z "${GO_BIN}" ] || [ ! -x "${GO_BIN}" ]; then
+  echo "go feature: ERROR — mise could not resolve 'go' binary" >&2
   exit 1
 fi
-echo "go feature: $("${GO_BIN_DIR}/go" version)"
+GO_BIN_DIR="$(dirname "${GO_BIN}")"
+echo "go feature: $("${GO_BIN}" version)"
 
-# --- symlinks for non-login shells ------------------------------------------
+# --- mise shims on PATH -----------------------------------------------------
+mise reshim
+SHIMS_DIR="${MISE_DATA_DIR}/shims"
+cat > /etc/profile.d/mise.sh <<EOF
+export MISE_DATA_DIR="${MISE_DATA_DIR}"
+export PATH="${SHIMS_DIR}:\$PATH"
+EOF
+chmod 0644 /etc/profile.d/mise.sh
+
 for bin in go gofmt; do
-  src="${GO_BIN_DIR}/${bin}"
+  src="${SHIMS_DIR}/${bin}"
   [ -x "${src}" ] && ln -sf "${src}" "/usr/local/bin/${bin}"
 done
 
