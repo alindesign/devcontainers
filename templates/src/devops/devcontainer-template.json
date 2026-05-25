@@ -1,0 +1,37 @@
+{
+  "id": "devops",
+  "version": "1.0.0",
+  "name": "DevOps (alindesign)",
+  "description": "Ubuntu + alindesign dotfiles + Python (uv) + Ansible + AWS CLI + gcloud + kubectl + helm + OpenTofu + secrets tooling. The full IaC / DevOps toolbox.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/devops",
+  "options": {
+    "pythonVersion": {
+      "type": "string",
+      "default": "latest",
+      "description": "Python version."
+    },
+    "kubectlVersion": {
+      "type": "string",
+      "default": "latest",
+      "description": "kubectl version."
+    },
+    "gcloudComponents": {
+      "type": "string",
+      "default": "",
+      "description": "Extra gcloud components (e.g. 'kubectl gke-gcloud-auth-plugin')."
+    },
+    "gitUserName": {
+      "type": "string",
+      "default": "",
+      "description": "git user.name (optional)."
+    },
+    "gitUserEmail": {
+      "type": "string",
+      "default": "",
+      "description": "git user.email (optional)."
+    }
+  },
+  "platforms": ["ansible", "aws", "gcp", "kubernetes", "python"],
+  "publisher": "alindesign",
+  "keywords": ["devops", "iac", "ansible", "aws", "gcloud", "kubectl", "opentofu", "terraform", "sops"]
+}

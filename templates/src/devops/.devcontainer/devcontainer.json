@@ -1,0 +1,44 @@
+{
+  "name": "DevOps (alindesign)",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/alindesign/features/dotfiles:1": {
+      "gitUserName": "${templateOption:gitUserName}",
+      "gitUserEmail": "${templateOption:gitUserEmail}"
+    },
+    "ghcr.io/alindesign/features/python:1": {
+      "version": "${templateOption:pythonVersion}",
+      "packageManager": "uv"
+    },
+    "ghcr.io/alindesign/features/ansible:1": {
+      "installLint": true
+    },
+    "ghcr.io/alindesign/features/aws-cli:1": {},
+    "ghcr.io/alindesign/features/gcloud:1": {
+      "installComponents": "${templateOption:gcloudComponents}"
+    },
+    "ghcr.io/alindesign/features/kubectl:1": {
+      "kubectlVersion": "${templateOption:kubectlVersion}"
+    },
+    "ghcr.io/alindesign/features/opentofu:1": {},
+    "ghcr.io/alindesign/features/secrets:1": {}
+  },
+  "remoteUser": "vscode",
+  "mounts": [
+    { "source": "${localEnv:HOME}/.aws", "target": "/home/vscode/.aws", "type": "bind" },
+    { "source": "${localEnv:HOME}/.config/gcloud", "target": "/home/vscode/.config/gcloud", "type": "bind" },
+    { "source": "${localEnv:HOME}/.kube", "target": "/home/vscode/.kube", "type": "bind" }
+  ],
+  "postCreateCommand": "ansible --version | head -n1 && kubectl version --client=true | head -n1 && tofu version | head -n1",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "redhat.ansible",
+        "amazonwebservices.aws-toolkit-vscode",
+        "googlecloudtools.cloudcode",
+        "hashicorp.terraform",
+        "ms-kubernetes-tools.vscode-kubernetes-tools"
+      ]
+    }
+  }
+}

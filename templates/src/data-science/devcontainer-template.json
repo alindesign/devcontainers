@@ -1,0 +1,28 @@
+{
+  "id": "data-science",
+  "version": "1.0.0",
+  "name": "Data Science (alindesign)",
+  "description": "Ubuntu + alindesign dotfiles + Python (uv) + JupyterLab + DuckDB + db-tooling. Quick-start for ML notebooks and ad-hoc data work.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/data-science",
+  "options": {
+    "pythonVersion": {
+      "type": "string",
+      "default": "latest",
+      "proposals": ["latest", "3.13", "3.12", "3.11"],
+      "description": "Python version."
+    },
+    "gitUserName": {
+      "type": "string",
+      "default": "",
+      "description": "git user.name (optional)."
+    },
+    "gitUserEmail": {
+      "type": "string",
+      "default": "",
+      "description": "git user.email (optional)."
+    }
+  },
+  "platforms": ["python", "data"],
+  "publisher": "alindesign",
+  "keywords": ["python", "uv", "jupyter", "duckdb", "data-science", "ml"]
+}

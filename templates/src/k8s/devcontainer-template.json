@@ -1,0 +1,32 @@
+{
+  "id": "k8s",
+  "version": "1.0.0",
+  "name": "Kubernetes (alindesign)",
+  "description": "Ubuntu + alindesign dotfiles + Go + kubectl + helm + k9s + Docker-in-Docker. For controller/operator dev and local cluster work (kind, k3d, minikube).",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/k8s",
+  "options": {
+    "goVersion": {
+      "type": "string",
+      "default": "latest",
+      "description": "Go version (used by most k8s controller toolchains)."
+    },
+    "kubectlVersion": {
+      "type": "string",
+      "default": "latest",
+      "description": "kubectl version."
+    },
+    "gitUserName": {
+      "type": "string",
+      "default": "",
+      "description": "git user.name (optional)."
+    },
+    "gitUserEmail": {
+      "type": "string",
+      "default": "",
+      "description": "git user.email (optional)."
+    }
+  },
+  "platforms": ["go", "kubernetes"],
+  "publisher": "alindesign",
+  "keywords": ["kubernetes", "k8s", "kubectl", "helm", "go", "docker-in-docker", "kind"]
+}
