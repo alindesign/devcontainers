@@ -48,7 +48,19 @@ fi
 
 # --- install Go via mise ----------------------------------------------------
 GO_SPEC="go@${GO_VERSION}"
-mise use --global "${GO_SPEC}"
+
+# System-wide pin so shims work for any user.
+install -d -m 0755 /etc/mise
+if [ ! -f /etc/mise/config.toml ]; then
+  printf '[tools]\n' > /etc/mise/config.toml
+fi
+if grep -q '^go = ' /etc/mise/config.toml; then
+  sed -i "s|^go = .*|go = \"${GO_VERSION}\"|" /etc/mise/config.toml
+else
+  sed -i "/^\[tools\]/a go = \"${GO_VERSION}\"" /etc/mise/config.toml
+fi
+chmod 0644 /etc/mise/config.toml
+
 mise install "${GO_SPEC}"
 
 GO_BIN="$(mise which go 2>/dev/null || true)"

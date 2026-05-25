@@ -69,10 +69,14 @@ chmod -R a+rwX "${MISE_DATA_DIR}"
 find "${MISE_DATA_DIR}" -type d -exec chmod g+s {} +
 
 # --- shell activation -------------------------------------------------------
-# Always expose MISE_DATA_DIR via /etc/profile.d so all shells see the same
-# shared toolchains, even from non-login RUN steps.
+# Expose MISE_DATA_DIR + mise shims dir via /etc/profile.d so all shells see
+# the same shared toolchains, even from non-login RUN steps. The shims dir
+# is what makes `node`, `go`, etc. resolvable on PATH without `mise activate`.
+# Also ensure /etc/mise exists so language features can pin tools system-wide.
+install -d -m 0755 /etc/mise
 cat > /etc/profile.d/mise.sh <<EOF
 export MISE_DATA_DIR="${MISE_DATA_DIR}"
+export PATH="${MISE_DATA_DIR}/shims:\$PATH"
 EOF
 chmod 0644 /etc/profile.d/mise.sh
 

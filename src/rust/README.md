@@ -1,6 +1,6 @@
 # rust
 
-Rust toolchain via [mise](https://mise.jdx.dev) (which uses `rustup` under the hood). Auto-bootstraps mise if not present.
+Rust toolchain via [`rustup`](https://rustup.rs), with `RUSTUP_HOME=/usr/local/rustup` and `CARGO_HOME=/usr/local/cargo` pinned system-wide so the toolchain is shared across all container users (and survives UID remapping in CI / dev container test harnesses).
 
 ## Options
 
@@ -23,4 +23,6 @@ Rust toolchain via [mise](https://mise.jdx.dev) (which uses `rustup` under the h
 }
 ```
 
-`$HOME/.cargo/bin` is added to the remote user's PATH so `cargo install` works as expected.
+`CARGO_HOME/bin` is exported on the global PATH via `/etc/profile.d/rust.sh`. Binaries (`cargo`, `rustc`, `rustup`, etc.) are also symlinked into `/usr/local/bin` so non-login shells (RUN steps, CI) pick them up without sourcing profile.
+
+`cargo install` writes into `${CARGO_HOME}/bin` (system-wide). If you want per-user crate installs, override `CARGO_INSTALL_ROOT=$HOME/.cargo` in your project.

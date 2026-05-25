@@ -48,7 +48,18 @@ fi
 
 # --- install Java ----------------------------------------------------------
 JAVA_SPEC="java@${JAVA_VERSION}"
-mise use --global "${JAVA_SPEC}"
+
+install -d -m 0755 /etc/mise
+if [ ! -f /etc/mise/config.toml ]; then
+  printf '[tools]\n' > /etc/mise/config.toml
+fi
+if grep -q '^java = ' /etc/mise/config.toml; then
+  sed -i "s|^java = .*|java = \"${JAVA_VERSION}\"|" /etc/mise/config.toml
+else
+  sed -i "/^\[tools\]/a java = \"${JAVA_VERSION}\"" /etc/mise/config.toml
+fi
+chmod 0644 /etc/mise/config.toml
+
 mise install "${JAVA_SPEC}"
 
 JAVA_HOME_DIR="$(mise where "${JAVA_SPEC}")"

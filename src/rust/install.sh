@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 # Feature: rust
+# Installs Rust via rustup directly (not via mise — the mise rust plugin
+# delegates to rustup but stores the toolchain under the invoking user's HOME,
+# which doesn't survive across container users). RUSTUP_HOME / CARGO_HOME are
+# pinned system-wide so all users in the container share the same toolchain.
 set -euo pipefail
 
 RUST_VERSION="${VERSION:-stable}"
@@ -13,8 +17,7 @@ fi
 
 detect_user() {
   if [ -n "${_REMOTE_USER:-}" ] && id -u "${_REMOTE_USER}" >/dev/null 2>&1; then
-    echo "${_REMOTE_USER}"
-    return
+    echo "${_REMOTE_USER}"; return
   fi
   for c in vscode node ubuntu devcontainer; do
     if id -u "${c}" >/dev/null 2>&1; then echo "${c}"; return; fi
@@ -32,69 +35,60 @@ apt-get install -y --no-install-recommends ca-certificates curl git build-essent
 apt-get clean
 rm -rf /var/lib/apt/lists/*
 
-# --- bootstrap mise ---------------------------------------------------------
-export MISE_DATA_DIR="/usr/local/share/mise"
-install -d -m 0775 "${MISE_DATA_DIR}"
+# --- shared rustup root -----------------------------------------------------
+export RUSTUP_HOME=/usr/local/rustup
+export CARGO_HOME=/usr/local/cargo
+install -d -m 0775 "${RUSTUP_HOME}" "${CARGO_HOME}"
+chown -R "${USERNAME}:${USER_GROUP}" "${RUSTUP_HOME}" "${CARGO_HOME}"
 
-if ! command -v mise >/dev/null 2>&1; then
-  curl -fsSL https://mise.run | MISE_INSTALL_PATH=/usr/local/bin/mise sh
-fi
+# --- install rustup as the remote user --------------------------------------
+sudo -u "${USERNAME}" \
+  HOME="$(getent passwd "${USERNAME}" | cut -d: -f6)" \
+  RUSTUP_HOME="${RUSTUP_HOME}" \
+  CARGO_HOME="${CARGO_HOME}" \
+  bash -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --default-toolchain ${RUST_VERSION} --profile minimal"
 
-if [ ! -f /etc/profile.d/mise.sh ]; then
-  cat > /etc/profile.d/mise.sh <<EOF
-export MISE_DATA_DIR="${MISE_DATA_DIR}"
-EOF
-  chmod 0644 /etc/profile.d/mise.sh
-fi
-
-# --- install Rust via mise --------------------------------------------------
-RUST_SPEC="rust@${RUST_VERSION}"
-mise use --global "${RUST_SPEC}"
-mise install "${RUST_SPEC}"
-
-# mise's rust plugin uses rustup under the hood and puts the real binaries in
-# the rustup toolchain dir, not under `mise where`. Resolve via `mise which`.
-RUSTC_BIN="$(mise which rustc 2>/dev/null || true)"
-if [ -z "${RUSTC_BIN}" ] || [ ! -x "${RUSTC_BIN}" ]; then
-  echo "rust feature: ERROR — mise could not resolve 'rustc' binary" >&2
+if [ ! -x "${CARGO_HOME}/bin/rustc" ]; then
+  echo "rust feature: ERROR — rustc not found at ${CARGO_HOME}/bin/rustc after rustup install" >&2
+  ls -la "${CARGO_HOME}/bin" 2>&1 || true
   exit 1
 fi
-RUST_BIN_DIR="$(dirname "${RUSTC_BIN}")"
-echo "rust feature: $("${RUSTC_BIN}" --version)"
+echo "rust feature: $("${CARGO_HOME}/bin/rustc" --version)"
 
-# --- rustup components / targets --------------------------------------------
-RUSTUP_BIN="$(mise which rustup 2>/dev/null || true)"
-if [ -n "${RUSTUP_BIN}" ] && [ -x "${RUSTUP_BIN}" ]; then
-  if [ -n "${COMPONENTS}" ]; then
-    # shellcheck disable=SC2086
-    "${RUSTUP_BIN}" component add ${COMPONENTS} || true
-  fi
-  if [ -n "${TARGETS}" ]; then
-    # shellcheck disable=SC2086
-    "${RUSTUP_BIN}" target add ${TARGETS} || true
-  fi
+# --- components / targets ---------------------------------------------------
+if [ -n "${COMPONENTS}" ]; then
+  # shellcheck disable=SC2086
+  sudo -u "${USERNAME}" \
+    HOME="$(getent passwd "${USERNAME}" | cut -d: -f6)" \
+    RUSTUP_HOME="${RUSTUP_HOME}" CARGO_HOME="${CARGO_HOME}" \
+    "${CARGO_HOME}/bin/rustup" component add ${COMPONENTS} || true
+fi
+if [ -n "${TARGETS}" ]; then
+  # shellcheck disable=SC2086
+  sudo -u "${USERNAME}" \
+    HOME="$(getent passwd "${USERNAME}" | cut -d: -f6)" \
+    RUSTUP_HOME="${RUSTUP_HOME}" CARGO_HOME="${CARGO_HOME}" \
+    "${CARGO_HOME}/bin/rustup" target add ${TARGETS} || true
 fi
 
-# --- mise shims on PATH (handles toolchain switches cleanly) ----------------
-mise reshim
-SHIMS_DIR="${MISE_DATA_DIR}/shims"
-cat > /etc/profile.d/mise.sh <<EOF
-export MISE_DATA_DIR="${MISE_DATA_DIR}"
-export PATH="${SHIMS_DIR}:\$PATH"
-EOF
-chmod 0644 /etc/profile.d/mise.sh
+# --- permissions ------------------------------------------------------------
+chmod -R a+rwX "${RUSTUP_HOME}" "${CARGO_HOME}"
+find "${RUSTUP_HOME}" "${CARGO_HOME}" -type d -exec chmod g+s {} +
 
-for bin in rustc cargo rustup rustfmt clippy-driver cargo-clippy rust-analyzer; do
-  src="${SHIMS_DIR}/${bin}"
+# --- expose to PATH globally ------------------------------------------------
+cat > /etc/profile.d/rust.sh <<EOF
+export RUSTUP_HOME="${RUSTUP_HOME}"
+export CARGO_HOME="${CARGO_HOME}"
+export PATH="${CARGO_HOME}/bin:\$PATH"
+EOF
+chmod 0644 /etc/profile.d/rust.sh
+
+for bin in cargo rustc rustup rustfmt clippy-driver cargo-clippy rust-analyzer; do
+  src="${CARGO_HOME}/bin/${bin}"
   [ -x "${src}" ] && ln -sf "${src}" "/usr/local/bin/${bin}"
 done
 
-# --- permissions ------------------------------------------------------------
-chown -R "${USERNAME}:${USER_GROUP}" "${MISE_DATA_DIR}"
-chmod -R a+rwX "${MISE_DATA_DIR}"
-find "${MISE_DATA_DIR}" -type d -exec chmod g+s {} +
-
-# --- shell activation -------------------------------------------------------
+# --- per-user shell hooks ---------------------------------------------------
 ensure_line() {
   local file="$1" line="$2"
   touch "${file}"
@@ -104,15 +98,12 @@ ensure_line() {
 
 if [ "${USERNAME}" != "root" ]; then
   USER_HOME="$(getent passwd "${USERNAME}" | cut -d: -f6)"
-  ensure_line "${USER_HOME}/.bashrc" "export MISE_DATA_DIR=\"${MISE_DATA_DIR}\""
-  ensure_line "${USER_HOME}/.bashrc" "export PATH=\"\$HOME/.cargo/bin:\$PATH\""
-  ensure_line "${USER_HOME}/.bashrc" 'eval "$(mise activate bash)"'
-
-  if [ -f "${USER_HOME}/.zshrc" ] || command -v zsh >/dev/null 2>&1; then
-    ensure_line "${USER_HOME}/.zshrc" "export MISE_DATA_DIR=\"${MISE_DATA_DIR}\""
-    ensure_line "${USER_HOME}/.zshrc" "export PATH=\"\$HOME/.cargo/bin:\$PATH\""
-    ensure_line "${USER_HOME}/.zshrc" 'eval "$(mise activate zsh)"'
-  fi
+  for rc in "${USER_HOME}/.bashrc" "${USER_HOME}/.zshrc"; do
+    [ -f "${rc}" ] || { [ "${rc##*/}" = ".bashrc" ] || continue; touch "${rc}"; }
+    ensure_line "${rc}" "export RUSTUP_HOME=\"${RUSTUP_HOME}\""
+    ensure_line "${rc}" "export CARGO_HOME=\"${CARGO_HOME}\""
+    ensure_line "${rc}" "export PATH=\"${CARGO_HOME}/bin:\$PATH\""
+  done
 fi
 
 echo "rust feature: done"

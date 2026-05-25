@@ -69,7 +69,21 @@ case "${NODE_VERSION_INPUT}" in
   *)                   MISE_NODE_SPEC="node@${NODE_VERSION_INPUT}" ;;
 esac
 
-mise use --global "${MISE_NODE_SPEC}"
+# Pin node in the SYSTEM-level config so shims resolve for every user, not
+# just root (build time). `mise use --global` writes to ~/.config/mise/...
+# of the invoking user, which root has access to but vscode does not.
+install -d -m 0755 /etc/mise
+if [ ! -f /etc/mise/config.toml ]; then
+  printf '[tools]\n' > /etc/mise/config.toml
+fi
+NODE_TOOL_VAL="${MISE_NODE_SPEC#node@}"
+if grep -q '^node = ' /etc/mise/config.toml; then
+  sed -i "s|^node = .*|node = \"${NODE_TOOL_VAL}\"|" /etc/mise/config.toml
+else
+  sed -i "/^\[tools\]/a node = \"${NODE_TOOL_VAL}\"" /etc/mise/config.toml
+fi
+chmod 0644 /etc/mise/config.toml
+
 mise install "${MISE_NODE_SPEC}"
 
 NODE_BIN="$(mise which node)"

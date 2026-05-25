@@ -47,12 +47,33 @@ if ! command -v npm >/dev/null 2>&1; then
   if ! command -v mise >/dev/null 2>&1; then
     curl -fsSL https://mise.run | MISE_INSTALL_PATH=/usr/local/bin/mise sh
   fi
-  mise use --global node@lts
-  mise install node@lts
 
-  NODE_BIN_DIR="$(mise where node@lts)/bin"
+  # System-wide pin so the shim can resolve node version for any user.
+  install -d -m 0755 /etc/mise
+  if [ ! -f /etc/mise/config.toml ]; then
+    printf '[tools]\n' > /etc/mise/config.toml
+  fi
+  if grep -q '^node = ' /etc/mise/config.toml; then
+    sed -i 's|^node = .*|node = "lts"|' /etc/mise/config.toml
+  else
+    sed -i '/^\[tools\]/a node = "lts"' /etc/mise/config.toml
+  fi
+  chmod 0644 /etc/mise/config.toml
+
+  mise install node@lts
+  mise reshim
+
+  # Use mise shims, not symlinks to the real binary — npm resolves its lib
+  # relative to argv[0] and a direct symlink breaks `npm -v`.
+  SHIMS_DIR="${MISE_DATA_DIR}/shims"
+  cat > /etc/profile.d/mise.sh <<EOF
+export MISE_DATA_DIR="${MISE_DATA_DIR}"
+export PATH="${SHIMS_DIR}:\$PATH"
+EOF
+  chmod 0644 /etc/profile.d/mise.sh
+
   for bin in node npm npx corepack; do
-    src="${NODE_BIN_DIR}/${bin}"
+    src="${SHIMS_DIR}/${bin}"
     [ -x "${src}" ] && ln -sf "${src}" "/usr/local/bin/${bin}"
   done
 
