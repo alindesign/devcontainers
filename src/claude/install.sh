@@ -97,10 +97,42 @@ fi
 
 npm install -g --no-audit --no-fund "${NPM_SPEC}"
 
-if ! command -v claude >/dev/null 2>&1; then
-  echo "claude feature: ERROR — 'claude' command not on PATH after install" >&2
+# `npm install -g` drops the `claude` bin under the node install's bin dir
+# (mise's install dir, or whatever NPM_PREFIX points at). Make sure it shows
+# up on PATH for the remote user via mise shims + a /usr/local/bin symlink.
+if command -v mise >/dev/null 2>&1; then
+  mise reshim || true
+fi
+
+# Find the freshly installed binary and symlink it.
+CLAUDE_BIN=""
+for candidate in \
+  "/usr/local/share/mise/shims/claude" \
+  "$(npm bin -g 2>/dev/null)/claude" \
+  "$(dirname "$(command -v npm)")/claude"; do
+  if [ -n "${candidate}" ] && [ -x "${candidate}" ]; then
+    CLAUDE_BIN="${candidate}"
+    break
+  fi
+done
+
+if [ -z "${CLAUDE_BIN}" ]; then
+  # Last-resort fallback: search mise install dirs.
+  CLAUDE_BIN="$(find /usr/local/share/mise/installs -maxdepth 5 -name claude -type f -executable 2>/dev/null | head -n1)"
+fi
+
+if [ -z "${CLAUDE_BIN}" ] || [ ! -x "${CLAUDE_BIN}" ]; then
+  echo "claude feature: ERROR — 'claude' binary not found after npm install -g" >&2
+  echo "npm prefix: $(npm config get prefix 2>&1 || true)" >&2
   exit 1
 fi
 
-echo "claude feature: installed claude $(claude --version 2>&1 | head -n1 || true)"
+ln -sf "${CLAUDE_BIN}" /usr/local/bin/claude
+
+if ! command -v claude >/dev/null 2>&1; then
+  echo "claude feature: ERROR — 'claude' command not on PATH after symlink (${CLAUDE_BIN})" >&2
+  exit 1
+fi
+
+echo "claude feature: installed claude $(claude --version 2>&1 | head -n1 || true) at ${CLAUDE_BIN}"
 echo "claude feature: done"
