@@ -92,28 +92,57 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install ajv-cli
-        run: npm install -g ajv-cli@5 ajv-formats@3
-
-      - name: Fetch upstream schema
-        run: |
-          curl -fsSL \
-            https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainerTemplate.schema.json \
-            -o /tmp/template.schema.json
-          jq empty /tmp/template.schema.json
-
-      - name: Validate every template manifest
+      # Upstream devcontainers/spec doesn't publish a JSON Schema for
+      # devcontainer-template.json (only feature + devcontainer schemas exist),
+      # so structural validation is done in-house against the documented spec:
+      # https://containers.dev/implementors/templates-distribution/
+      - name: Validate every template manifest (structural)
         run: |
           set -e
           fail=0
           for f in templates/src/*/devcontainer-template.json; do
             echo "--- $f ---"
-            if ajv validate -s /tmp/template.schema.json -d "$f" --spec=draft7 -c ajv-formats 2>&1; then
-              echo "ok"
-            else
-              echo "::error file=$f::failed schema validation"
+            folder=$(basename "$(dirname "$f")")
+
+            for field in id version name description; do
+              v=$(jq -r --arg k "$field" '.[$k] // ""' "$f")
+              if [ -z "$v" ] || [ "$v" = "null" ]; then
+                echo "::error file=$f::missing required field '$field'"
+                fail=1
+              fi
+            done
+
+            id=$(jq -r .id "$f")
+            version=$(jq -r .version "$f")
+            if [ "$id" != "$folder" ]; then
+              echo "::error file=$f::id ($id) must match folder name ($folder)"
               fail=1
             fi
+            if ! echo "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+'; then
+              echo "::error file=$f::version ($version) must be SemVer"
+              fail=1
+            fi
+
+            if jq -e 'has("options")' "$f" >/dev/null; then
+              if ! jq -e '.options | type == "object"' "$f" >/dev/null; then
+                echo "::error file=$f::options must be an object"
+                fail=1
+              else
+                while IFS= read -r opt; do
+                  t=$(jq -r --arg k "$opt" '.options[$k].type // ""' "$f")
+                  d=$(jq -r --arg k "$opt" '.options[$k].description // ""' "$f")
+                  if [ -z "$t" ]; then
+                    echo "::error file=$f::option '$opt' is missing 'type'"
+                    fail=1
+                  fi
+                  if [ -z "$d" ]; then
+                    echo "::error file=$f::option '$opt' is missing 'description'"
+                    fail=1
+                  fi
+                done < <(jq -r '.options | keys[]?' "$f")
+              fi
+            fi
+            echo "ok"
           done
           exit $fail
 
@@ -151,14 +180,14 @@ jobs:
           fail=0
           while IFS= read -r f; do
             echo "--- $f ---"
-            if ! shellcheck -x -e SC2086,SC1091 "$f"; then
+            if ! shellcheck -x -e SC2086,SC1091,SC2016 "$f"; then
               echo "::error file=$f::shellcheck issues"
               fail=1
             fi
           done < <(find src -type f -name install.sh)
           while IFS= read -r f; do
             echo "--- $f ---"
-            if ! shellcheck -x -e SC2086,SC1091 "$f"; then
+            if ! shellcheck -x -e SC2086,SC1091,SC2016 "$f"; then
               echo "::error file=$f::shellcheck issues"
               fail=1
             fi

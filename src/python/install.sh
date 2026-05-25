@@ -80,7 +80,6 @@ if [ -z "${PYTHON_BIN}" ] || [ ! -x "${PYTHON_BIN}" ]; then
   echo "python feature: ERROR — mise could not resolve 'python' binary" >&2
   exit 1
 fi
-PYTHON_BIN_DIR="$(dirname "${PYTHON_BIN}")"
 echo "python feature: $("${PYTHON_BIN}" --version)"
 
 # --- mise shims on PATH (system-wide) ---------------------------------------

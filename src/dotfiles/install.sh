@@ -50,8 +50,8 @@ echo "dotfiles feature: target user=${USERNAME} home=${USER_HOME}"
 # --- arch -------------------------------------------------------------------
 arch="$(uname -m)"
 case "${arch}" in
-  x86_64|amd64) ARCH_DEB="amd64"; ARCH_GH="x86_64"; ARCH_MUSL="x86_64-unknown-linux-musl"; ARCH_GNU="x86_64-unknown-linux-gnu" ;;
-  aarch64|arm64) ARCH_DEB="arm64"; ARCH_GH="aarch64"; ARCH_MUSL="aarch64-unknown-linux-musl"; ARCH_GNU="aarch64-unknown-linux-gnu" ;;
+  x86_64|amd64) ARCH_MUSL="x86_64-unknown-linux-musl"; ARCH_GNU="x86_64-unknown-linux-gnu" ;;
+  aarch64|arm64) ARCH_MUSL="aarch64-unknown-linux-musl"; ARCH_GNU="aarch64-unknown-linux-gnu" ;;
   *) echo "dotfiles feature: unsupported arch ${arch}" >&2; exit 1 ;;
 esac
 

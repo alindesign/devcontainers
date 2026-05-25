@@ -26,7 +26,6 @@ detect_user() {
 }
 
 USERNAME="$(detect_user)"
-USER_GROUP="$(id -gn "${USERNAME}")"
 echo "docker-in-docker feature: target user=${USERNAME}"
 
 export DEBIAN_FRONTEND=noninteractive

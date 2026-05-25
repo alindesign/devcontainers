@@ -89,10 +89,8 @@ if [ "${AUTO_ACTIVATE}" = "true" ] && [ "${USERNAME}" != "root" ]; then
     chown "${USERNAME}:${USER_GROUP}" "${file}" 2>/dev/null || true
   }
 
-  for rc in "${USER_HOME}/.bashrc"; do
-    ensure_line "${rc}" "export MISE_DATA_DIR=\"${MISE_DATA_DIR}\""
-    ensure_line "${rc}" 'eval "$(mise activate bash)"'
-  done
+  ensure_line "${USER_HOME}/.bashrc" "export MISE_DATA_DIR=\"${MISE_DATA_DIR}\""
+  ensure_line "${USER_HOME}/.bashrc" 'eval "$(mise activate bash)"'
 
   if [ -f "${USER_HOME}/.zshrc" ] || command -v zsh >/dev/null 2>&1; then
     ensure_line "${USER_HOME}/.zshrc" "export MISE_DATA_DIR=\"${MISE_DATA_DIR}\""
