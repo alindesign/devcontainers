@@ -1,8 +1,8 @@
 {
   "id": "dotfiles",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "alindesign dotfiles",
-  "description": "zsh + starship + CLI tools (fd, rg, bat, fzf, jq, delta, eza, zoxide) + nvim + git config",
+  "description": "zsh + starship + CLI tools (fd, rg, bat, fzf, jq, delta, eza, zoxide) + nvim + git config, with optional GPG/SSH commit signing.",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/dotfiles",
   "options": {
     "setDefaultShell": {
@@ -19,6 +19,17 @@
       "type": "string",
       "default": "",
       "description": "git config user.email (skipped if empty)"
+    },
+    "gitSigningFormat": {
+      "type": "string",
+      "default": "gpg",
+      "enum": ["gpg", "ssh", "none"],
+      "description": "Format for commit signing. 'gpg' installs gnupg + sets pinentry to loopback. 'ssh' configures git for SSH signing and skips gnupg. 'none' installs neither."
+    },
+    "gitSigningKey": {
+      "type": "string",
+      "default": "",
+      "description": "Signing key. For 'gpg': GPG key ID (e.g. '0xABCD1234' or fingerprint). For 'ssh': absolute path inside the container to your public SSH key (e.g. '/home/vscode/.ssh/id_ed25519.pub'). Empty leaves git unsigned even if format is set."
     },
     "installNvim": {
       "type": "boolean",

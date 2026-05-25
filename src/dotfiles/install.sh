@@ -7,7 +7,17 @@ set -euo pipefail
 SET_DEFAULT_SHELL="${SETDEFAULTSHELL:-true}"
 GIT_USER_NAME="${GITUSERNAME:-}"
 GIT_USER_EMAIL="${GITUSEREMAIL:-}"
+GIT_SIGNING_FORMAT="${GITSIGNINGFORMAT:-gpg}"
+GIT_SIGNING_KEY="${GITSIGNINGKEY:-}"
 INSTALL_NVIM="${INSTALLNVIM:-true}"
+
+case "${GIT_SIGNING_FORMAT}" in
+  gpg|ssh|none) ;;
+  *)
+    echo "dotfiles feature: invalid gitSigningFormat='${GIT_SIGNING_FORMAT}' (expected gpg|ssh|none)" >&2
+    exit 1
+    ;;
+esac
 
 if [ "$(id -u)" -ne 0 ]; then
   echo "dotfiles feature: must run as root" >&2
@@ -73,6 +83,9 @@ APT_PKGS=(
 )
 if [ "${INSTALL_NVIM}" = "true" ]; then
   APT_PKGS+=(neovim)
+fi
+if [ "${GIT_SIGNING_FORMAT}" = "gpg" ]; then
+  APT_PKGS+=(gnupg2)
 fi
 
 apt-get install -y --no-install-recommends "${APT_PKGS[@]}"
@@ -260,6 +273,59 @@ fi
 if [ -n "${GIT_USER_EMAIL}" ]; then
   sudo -u "${USERNAME}" git config --global user.email "${GIT_USER_EMAIL}"
 fi
+
+# --- commit signing ---------------------------------------------------------
+ensure_line() {
+  local file="$1" line="$2"
+  touch "${file}"
+  grep -qxF "${line}" "${file}" || echo "${line}" >> "${file}"
+  chown "${USERNAME}:$(id -gn "${USERNAME}")" "${file}" 2>/dev/null || true
+}
+
+case "${GIT_SIGNING_FORMAT}" in
+  gpg)
+    # gnupg installed above; set up loopback pinentry so it works without TUI,
+    # and export GPG_TTY in interactive shells so the agent can prompt.
+    GNUPG_DIR="${USER_HOME}/.gnupg"
+    install -d -m 0700 "${GNUPG_DIR}"
+    chown "${USERNAME}:$(id -gn "${USERNAME}")" "${GNUPG_DIR}"
+    GPG_CONF="${GNUPG_DIR}/gpg.conf"
+    if ! grep -q '^pinentry-mode loopback' "${GPG_CONF}" 2>/dev/null; then
+      echo 'pinentry-mode loopback' >> "${GPG_CONF}"
+    fi
+    GPG_AGENT_CONF="${GNUPG_DIR}/gpg-agent.conf"
+    if ! grep -q '^allow-loopback-pinentry' "${GPG_AGENT_CONF}" 2>/dev/null; then
+      echo 'allow-loopback-pinentry' >> "${GPG_AGENT_CONF}"
+    fi
+    chown -R "${USERNAME}:$(id -gn "${USERNAME}")" "${GNUPG_DIR}"
+    chmod 0600 "${GPG_CONF}" "${GPG_AGENT_CONF}" 2>/dev/null || true
+
+    # Export GPG_TTY so `gpg --sign` from interactive shells can find the tty.
+    ensure_line "${USER_HOME}/.bashrc" 'export GPG_TTY=$(tty)'
+    [ -f "${USER_HOME}/.zshrc" ] && ensure_line "${USER_HOME}/.zshrc" 'export GPG_TTY=$(tty)'
+
+    if [ -n "${GIT_SIGNING_KEY}" ]; then
+      sudo -u "${USERNAME}" git config --global user.signingkey "${GIT_SIGNING_KEY}"
+      sudo -u "${USERNAME}" git config --global gpg.format openpgp
+      sudo -u "${USERNAME}" git config --global commit.gpgsign true
+      sudo -u "${USERNAME}" git config --global tag.gpgsign true
+    fi
+    ;;
+  ssh)
+    if [ -n "${GIT_SIGNING_KEY}" ]; then
+      sudo -u "${USERNAME}" git config --global gpg.format ssh
+      sudo -u "${USERNAME}" git config --global user.signingkey "${GIT_SIGNING_KEY}"
+      sudo -u "${USERNAME}" git config --global commit.gpgsign true
+      sudo -u "${USERNAME}" git config --global tag.gpgsign true
+      # Point allowedSignersFile so `git log --show-signature` can verify.
+      ensure_line "${USER_HOME}/.config/git/allowed_signers" ""
+      sudo -u "${USERNAME}" git config --global gpg.ssh.allowedSignersFile "${USER_HOME}/.config/git/allowed_signers"
+    fi
+    ;;
+  none)
+    : # no signing setup
+    ;;
+esac
 
 # nvim minimal config
 if [ "${INSTALL_NVIM}" = "true" ]; then

@@ -1,0 +1,14 @@
+{
+  "features": {
+    "ghcr.io/alindesign/features/dotfiles:1": {
+      "version": "1.0.0",
+      "resolved": "ghcr.io/alindesign/features/dotfiles@sha256:201cf51ad8783827b0c0cbb5fa7e3fbcfbac3f0c092e01f625ee1beacd8f0a66",
+      "integrity": "sha256:201cf51ad8783827b0c0cbb5fa7e3fbcfbac3f0c092e01f625ee1beacd8f0a66"
+    },
+    "ghcr.io/alindesign/features/node:1": {
+      "version": "1.0.0",
+      "resolved": "ghcr.io/alindesign/features/node@sha256:f8918749316c3c3c839faabe34562fc3054c4700b1859994bf00ca7eeab3fefe",
+      "integrity": "sha256:f8918749316c3c3c839faabe34562fc3054c4700b1859994bf00ca7eeab3fefe"
+    }
+  }
+}

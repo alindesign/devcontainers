@@ -1,0 +1,27 @@
+{
+  "name": "Node.js (alindesign)",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/alindesign/features/dotfiles:1": {
+      "gitUserName": "Your Name",
+      "gitUserEmail": "you@example.com"
+    },
+    "ghcr.io/alindesign/features/claude:1": {},
+    "ghcr.io/alindesign/features/node:2": {
+      "version": "lts",
+      "packageManager": "pnpm"
+    }
+  },
+  "remoteUser": "vscode",
+  "postCreateCommand": "node --version && pnpm --version",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "ms-vscode.vscode-typescript-next"
+      ]
+    }
+  }
+}
