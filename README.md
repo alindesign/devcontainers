@@ -13,6 +13,8 @@ Reusable [Dev Container Features](https://containers.dev/implementors/features/)
 | [rust](src/rust) | `ghcr.io/alindesign/features/rust:1` | Rust via mise (rustup) with components + targets |
 | [java](src/java) | `ghcr.io/alindesign/features/java:1` | Java (Temurin) via mise + optional Maven/Gradle |
 | [ocaml](src/ocaml) | `ghcr.io/alindesign/features/ocaml:1` | OCaml via opam (mise has no first-class OCaml plugin) |
+| [python](src/python) | `ghcr.io/alindesign/features/python:1` | Python via mise + uv (default) / poetry / pip |
+| [ansible](src/ansible) | `ghcr.io/alindesign/features/ansible:1` | Ansible (+ ansible-lint) via uv tool. Auto-bootstraps Python. |
 | [claude](src/claude) | `ghcr.io/alindesign/features/claude:1` | Claude Code CLI via npm, mounts `~/.claude` from host |
 | [aws-cli](src/aws-cli) | `ghcr.io/alindesign/features/aws-cli:1` | AWS CLI v2 from the official installer, mounts `~/.aws` from host |
 | [gcloud](src/gcloud) | `ghcr.io/alindesign/features/gcloud:1` | gcloud CLI via Google apt repo, mounts `~/.config/gcloud` from host |
@@ -28,7 +30,9 @@ The mise-based features (`node`, `go`, `rust`, `java`) all auto-bootstrap mise i
 | [rust](templates/src/rust) | `ghcr.io/alindesign/templates/rust` | Ubuntu + `dotfiles` + `rust` (stable + clippy/rustfmt/rust-analyzer) |
 | [java](templates/src/java) | `ghcr.io/alindesign/templates/java` | Ubuntu + `dotfiles` + `java` (Temurin 21) + Maven |
 | [ocaml](templates/src/ocaml) | `ghcr.io/alindesign/templates/ocaml` | Ubuntu + `dotfiles` + `ocaml` (5.2.0 + dune + LSP) |
-| [claude-dev](templates/src/claude-dev) | `ghcr.io/alindesign/templates/claude-dev` | Ubuntu + `dotfiles` + `node` + `claude` + mounts `~/.claude` + `~/.claude.json` |
+| [python](templates/src/python) | `ghcr.io/alindesign/templates/python` | Ubuntu + `dotfiles` + `python` (uv by default) |
+| [ansible](templates/src/ansible) | `ghcr.io/alindesign/templates/ansible` | Ubuntu + `dotfiles` + `python` (uv) + `ansible` + `ansible-lint` |
+| [claude-dev](templates/src/claude-dev) | `ghcr.io/alindesign/templates/claude-dev` | Ubuntu + `dotfiles` + `node` + `claude` + mounts `~/.claude` + `~/.claude.json` + macOS Keychain dump |
 | [cloud-ops](templates/src/cloud-ops) | `ghcr.io/alindesign/templates/cloud-ops` | Ubuntu + `dotfiles` + `aws-cli` + `gcloud` + mounts `~/.aws` + `~/.config/gcloud` |
 
 ## Use in a new project

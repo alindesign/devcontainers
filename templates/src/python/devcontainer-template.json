@@ -1,0 +1,34 @@
+{
+  "id": "python",
+  "version": "1.0.0",
+  "name": "Python (alindesign)",
+  "description": "Ubuntu + alindesign dotfiles + Python via mise + uv (default) / poetry / none.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/python",
+  "options": {
+    "pythonVersion": {
+      "type": "string",
+      "default": "latest",
+      "proposals": ["latest", "3.13", "3.12", "3.11"],
+      "description": "Python version (passed to the python feature)."
+    },
+    "packageManager": {
+      "type": "string",
+      "default": "uv",
+      "proposals": ["uv", "poetry", "none"],
+      "description": "Package/project manager."
+    },
+    "gitUserName": {
+      "type": "string",
+      "default": "",
+      "description": "git user.name (optional)."
+    },
+    "gitUserEmail": {
+      "type": "string",
+      "default": "",
+      "description": "git user.email (optional)."
+    }
+  },
+  "platforms": ["python"],
+  "publisher": "alindesign",
+  "keywords": ["python", "uv", "poetry", "pip", "mise", "dotfiles"]
+}

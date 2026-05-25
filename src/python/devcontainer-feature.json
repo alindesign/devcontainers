@@ -1,0 +1,29 @@
+{
+  "id": "python",
+  "version": "1.0.0",
+  "name": "Python",
+  "description": "Python via mise, with a configurable package/project manager (uv by default; poetry or none/pip supported). uv is installed from the official Astral release, poetry from its official installer.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/python",
+  "options": {
+    "version": {
+      "type": "string",
+      "default": "latest",
+      "proposals": ["latest", "3.13", "3.12", "3.11", "3.10"],
+      "description": "Python version to install via mise. 'latest' resolves to the most recent stable, or pin to a major/full version."
+    },
+    "packageManager": {
+      "type": "string",
+      "default": "uv",
+      "enum": ["uv", "poetry", "none"],
+      "description": "Default package/project manager. 'uv' (recommended) is the fast Rust-based manager from Astral. 'poetry' is the classic project manager. 'none' leaves you with bare pip from the Python install."
+    },
+    "packageManagerVersion": {
+      "type": "string",
+      "default": "latest",
+      "description": "Version pin for uv/poetry. 'latest' tracks the upstream installer default. Ignored when packageManager is 'none'."
+    }
+  },
+  "installsAfter": [
+    "ghcr.io/devcontainers/features/common-utils"
+  ]
+}

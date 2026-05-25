@@ -1,0 +1,25 @@
+{
+  "name": "Python (alindesign)",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/alindesign/features/dotfiles:1": {
+      "gitUserName": "${templateOption:gitUserName}",
+      "gitUserEmail": "${templateOption:gitUserEmail}"
+    },
+    "ghcr.io/alindesign/features/python:1": {
+      "version": "${templateOption:pythonVersion}",
+      "packageManager": "${templateOption:packageManager}"
+    }
+  },
+  "remoteUser": "vscode",
+  "postCreateCommand": "python --version && (uv --version 2>/dev/null || poetry --version 2>/dev/null || pip --version)",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff"
+      ]
+    }
+  }
+}

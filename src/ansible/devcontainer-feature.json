@@ -1,0 +1,27 @@
+{
+  "id": "ansible",
+  "version": "1.0.0",
+  "name": "Ansible",
+  "description": "Installs Ansible (and optionally ansible-lint) via uv tool, with pipx fallback. Auto-bootstraps Python + uv if no Python install is present.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/ansible",
+  "options": {
+    "version": {
+      "type": "string",
+      "default": "latest",
+      "description": "Ansible version (passed as `ansible@<version>` to uv/pipx). 'latest' tracks PyPI."
+    },
+    "installLint": {
+      "type": "boolean",
+      "default": true,
+      "description": "Also install `ansible-lint`."
+    },
+    "extraCollections": {
+      "type": "string",
+      "default": "",
+      "description": "Space-separated Ansible Galaxy collections to install (e.g. 'community.general ansible.posix'). Empty to skip."
+    }
+  },
+  "installsAfter": [
+    "ghcr.io/devcontainers/features/common-utils"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "with-poetry": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "remoteUser": "vscode",
+    "features": {
+      "python": {
+        "packageManager": "poetry"
+      }
+    }
+  },
+  "with-none": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "remoteUser": "vscode",
+    "features": {
+      "python": {
+        "packageManager": "none"
+      }
+    }
+  },
+  "pinned-version": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "remoteUser": "vscode",
+    "features": {
+      "python": {
+        "version": "3.12",
+        "packageManager": "uv"
+      }
+    }
+  }
+}

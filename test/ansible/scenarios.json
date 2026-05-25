@@ -1,0 +1,19 @@
+{
+  "without-lint": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "remoteUser": "vscode",
+    "features": {
+      "ansible": {
+        "installLint": false
+      }
+    }
+  },
+  "with-python-feature": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "remoteUser": "vscode",
+    "features": {
+      "python": {},
+      "ansible": {}
+    }
+  }
+}

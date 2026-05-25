@@ -1,0 +1,30 @@
+{
+  "name": "Ansible (alindesign)",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/alindesign/features/dotfiles:1": {
+      "gitUserName": "${templateOption:gitUserName}",
+      "gitUserEmail": "${templateOption:gitUserEmail}"
+    },
+    "ghcr.io/alindesign/features/python:1": {
+      "version": "${templateOption:pythonVersion}",
+      "packageManager": "uv"
+    },
+    "ghcr.io/alindesign/features/ansible:1": {
+      "version": "${templateOption:ansibleVersion}",
+      "installLint": true,
+      "extraCollections": "${templateOption:extraCollections}"
+    }
+  },
+  "remoteUser": "vscode",
+  "postCreateCommand": "ansible --version | head -n1 && ansible-lint --version 2>&1 | head -n1",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "redhat.ansible",
+        "redhat.vscode-yaml"
+      ]
+    }
+  }
+}

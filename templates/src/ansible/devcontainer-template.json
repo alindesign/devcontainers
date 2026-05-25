@@ -1,0 +1,38 @@
+{
+  "id": "ansible",
+  "version": "1.0.0",
+  "name": "Ansible (alindesign)",
+  "description": "Ubuntu + alindesign dotfiles + Python (uv) + Ansible + ansible-lint, ready for playbook authoring and IaC work.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/ansible",
+  "options": {
+    "pythonVersion": {
+      "type": "string",
+      "default": "latest",
+      "proposals": ["latest", "3.13", "3.12", "3.11"],
+      "description": "Python version (passed to the python feature)."
+    },
+    "ansibleVersion": {
+      "type": "string",
+      "default": "latest",
+      "description": "Ansible PyPI version (passed to the ansible feature)."
+    },
+    "extraCollections": {
+      "type": "string",
+      "default": "community.general ansible.posix",
+      "description": "Space-separated Galaxy collections to install."
+    },
+    "gitUserName": {
+      "type": "string",
+      "default": "",
+      "description": "git user.name (optional)."
+    },
+    "gitUserEmail": {
+      "type": "string",
+      "default": "",
+      "description": "git user.email (optional)."
+    }
+  },
+  "platforms": ["python", "ansible"],
+  "publisher": "alindesign",
+  "keywords": ["ansible", "ansible-lint", "iac", "python", "uv", "dotfiles"]
+}

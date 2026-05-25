@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        feature: [dotfiles, mise, node, go, rust, java, ocaml, claude, aws-cli, gcloud]
+        feature: [dotfiles, mise, node, go, rust, java, ocaml, python, ansible, claude, aws-cli, gcloud]
     steps:
       - uses: actions/checkout@v4
 
