@@ -1,0 +1,166 @@
+name: Validate manifests
+
+on:
+  pull_request:
+    paths:
+      - "src/**/devcontainer-feature.json"
+      - "templates/**/devcontainer-template.json"
+      - "templates/**/devcontainer.json"
+      - ".github/workflows/validate.yml"
+  push:
+    branches: [main]
+    paths:
+      - "src/**/devcontainer-feature.json"
+      - "templates/**/devcontainer-template.json"
+      - "templates/**/devcontainer.json"
+      - ".github/workflows/validate.yml"
+  workflow_dispatch:
+
+jobs:
+  json-syntax:
+    runs-on: ubuntu-latest
+    name: JSON syntax (jq)
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate JSON syntax
+        run: |
+          set -e
+          fail=0
+          while IFS= read -r f; do
+            if ! jq empty "$f" >/dev/null 2>&1; then
+              echo "::error file=$f::invalid JSON"
+              fail=1
+            else
+              echo "ok: $f"
+            fi
+          done < <(find src templates -type f -name "*.json")
+          exit $fail
+
+  feature-schema:
+    runs-on: ubuntu-latest
+    name: devcontainer-feature.json schema
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ajv-cli
+        run: npm install -g ajv-cli@5 ajv-formats@3
+
+      - name: Fetch upstream schema
+        run: |
+          curl -fsSL \
+            https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainerFeature.schema.json \
+            -o /tmp/feature.schema.json
+          jq empty /tmp/feature.schema.json
+
+      - name: Validate every feature manifest
+        run: |
+          set -e
+          fail=0
+          for f in src/*/devcontainer-feature.json; do
+            echo "--- $f ---"
+            if ajv validate -s /tmp/feature.schema.json -d "$f" --spec=draft7 -c ajv-formats 2>&1; then
+              echo "ok"
+            else
+              echo "::error file=$f::failed schema validation"
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: Sanity checks (id/version/options consistency)
+        run: |
+          set -e
+          fail=0
+          for f in src/*/devcontainer-feature.json; do
+            folder=$(basename "$(dirname "$f")")
+            id=$(jq -r .id "$f")
+            version=$(jq -r .version "$f")
+            if [ "$id" != "$folder" ]; then
+              echo "::error file=$f::id ($id) must match folder name ($folder)"
+              fail=1
+            fi
+            if ! echo "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+'; then
+              echo "::error file=$f::version ($version) must be SemVer"
+              fail=1
+            fi
+          done
+          exit $fail
+
+  template-schema:
+    runs-on: ubuntu-latest
+    name: devcontainer-template.json + templateOption refs
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ajv-cli
+        run: npm install -g ajv-cli@5 ajv-formats@3
+
+      - name: Fetch upstream schema
+        run: |
+          curl -fsSL \
+            https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainerTemplate.schema.json \
+            -o /tmp/template.schema.json
+          jq empty /tmp/template.schema.json
+
+      - name: Validate every template manifest
+        run: |
+          set -e
+          fail=0
+          for f in templates/src/*/devcontainer-template.json; do
+            echo "--- $f ---"
+            if ajv validate -s /tmp/template.schema.json -d "$f" --spec=draft7 -c ajv-formats 2>&1; then
+              echo "ok"
+            else
+              echo "::error file=$f::failed schema validation"
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: Check templateOption refs match declared options
+        run: |
+          set -e
+          fail=0
+          for manifest in templates/src/*/devcontainer-template.json; do
+            dir=$(dirname "$manifest")
+            dc="$dir/.devcontainer/devcontainer.json"
+            if [ ! -f "$dc" ]; then continue; fi
+            declared=$(jq -r '.options | keys[]' "$manifest" 2>/dev/null | sort -u)
+            referenced=$(grep -oE 'templateOption:[a-zA-Z][a-zA-Z0-9]*' "$dc" | sed 's/templateOption://' | sort -u || true)
+            for r in $referenced; do
+              if ! echo "$declared" | grep -qx "$r"; then
+                echo "::error file=$dc::references templateOption:$r but it's not in $manifest options"
+                fail=1
+              fi
+            done
+          done
+          exit $fail
+
+  shellcheck:
+    runs-on: ubuntu-latest
+    name: shellcheck install.sh + test scripts
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shellcheck
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends shellcheck
+      - name: Lint install.sh
+        run: |
+          set -e
+          fail=0
+          while IFS= read -r f; do
+            echo "--- $f ---"
+            if ! shellcheck -x -e SC2086,SC1091 "$f"; then
+              echo "::error file=$f::shellcheck issues"
+              fail=1
+            fi
+          done < <(find src -type f -name install.sh)
+          while IFS= read -r f; do
+            echo "--- $f ---"
+            if ! shellcheck -x -e SC2086,SC1091 "$f"; then
+              echo "::error file=$f::shellcheck issues"
+              fail=1
+            fi
+          done < <(find test -type f -name "*.sh")
+          exit $fail

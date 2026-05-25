@@ -1,0 +1,50 @@
+# git-cliff config (https://git-cliff.org). Generate the changelog from
+# conventional commits with:
+#
+#   git cliff --output CHANGELOG.md
+#   git cliff --tag v0.2.0 --unreleased --output CHANGELOG.md
+#
+# Install: `brew install git-cliff` (already in your dotfiles' brewfile).
+
+[changelog]
+header = """
+# Changelog
+
+All notable changes to this repo's Dev Container Features and Templates are documented here.
+Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); each feature and template
+has its own SemVer in `devcontainer-feature.json` / `devcontainer-template.json`.
+
+"""
+body = """
+{% if version %}\
+## [{{ version | trim_start_matches(pat="v") }}] — {{ timestamp | date(format="%Y-%m-%d") }}
+{% else %}\
+## [Unreleased]
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | upper_first }}
+{% for commit in commits %}
+- {% if commit.scope %}**{{ commit.scope }}**: {% endif %}{{ commit.message | upper_first }}\
+{% endfor %}
+{% endfor %}\n
+"""
+trim = true
+
+[git]
+conventional_commits = true
+filter_unconventional = false
+split_commits = false
+commit_parsers = [
+  { message = "^feat", group = "Added" },
+  { message = "^fix", group = "Fixed" },
+  { message = "^perf", group = "Performance" },
+  { message = "^refactor", group = "Changed" },
+  { message = "^docs", group = "Documentation" },
+  { message = "^test", group = "Tests" },
+  { message = "^chore", skip = true },
+  { message = "^ci", skip = true },
+  { message = "^style", skip = true },
+]
+filter_commits = false
+tag_pattern = "v[0-9]*"
+sort_commits = "oldest"

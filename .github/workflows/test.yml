@@ -13,14 +13,106 @@ on:
       - "test/**"
       - ".github/workflows/test.yml"
   workflow_dispatch:
+    inputs:
+      run-all:
+        description: "Run the full matrix regardless of which paths changed"
+        type: boolean
+        default: true
 
 jobs:
+  # Detect which features need testing this run. Only the ones with changes
+  # under src/<feature>/ or test/<feature>/ get into the matrix — unless this
+  # is a push to main or a manual dispatch with run-all=true (full matrix).
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      features: ${{ steps.set.outputs.features }}
+      any: ${{ steps.set.outputs.any }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # need history for the diff range
+
+      - name: Determine diff range
+        id: range
+        run: |
+          set -e
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+            head="${{ github.event.pull_request.head.sha }}"
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            base="${{ github.event.before }}"
+            head="${{ github.sha }}"
+            # If push is the first commit on a branch, github.event.before is
+            # all zeros; fall back to HEAD~1.
+            if [ "$base" = "0000000000000000000000000000000000000000" ]; then
+              base="$(git rev-parse HEAD~1 2>/dev/null || echo '')"
+            fi
+          else
+            base=""
+            head=""
+          fi
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+          echo "head=$head" >> "$GITHUB_OUTPUT"
+
+      - name: Compute changed features
+        id: set
+        run: |
+          set -e
+          all_features=$(ls src | sort -u | jq -R . | jq -sc .)
+          echo "all features: $all_features"
+
+          run_all="${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run-all) }}"
+
+          # Workflow + test-lib changes affect everything, so always full matrix.
+          if [ "$run_all" = "true" ]; then
+            reason="full matrix (push to main or workflow_dispatch run-all)"
+            selected="$all_features"
+          else
+            base="${{ steps.range.outputs.base }}"
+            head="${{ steps.range.outputs.head }}"
+            if [ -z "$base" ] || [ -z "$head" ]; then
+              reason="diff range unavailable — full matrix"
+              selected="$all_features"
+            else
+              changed=$(git diff --name-only "$base" "$head" 2>/dev/null || true)
+              echo "changed files:"
+              echo "$changed"
+              # Infrastructure changes -> full matrix
+              if echo "$changed" | grep -Eq '^(\.github/workflows/test\.yml|test/_global/)'; then
+                reason="workflow or global test changed — full matrix"
+                selected="$all_features"
+              else
+                selected=$(echo "$changed" \
+                  | awk -F/ '$1=="src" && $2!="" {print $2} $1=="test" && $2!="" {print $2}' \
+                  | sort -u \
+                  | jq -R . | jq -sc 'map(select(length>0))')
+                if [ "$selected" = "[]" ] || [ -z "$selected" ]; then
+                  reason="no feature-related changes"
+                  selected="[]"
+                else
+                  reason="changed features: $selected"
+                fi
+              fi
+            fi
+          fi
+
+          echo "decision: $reason"
+          echo "features=$selected" >> "$GITHUB_OUTPUT"
+          if [ "$selected" = "[]" ]; then
+            echo "any=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "any=true" >> "$GITHUB_OUTPUT"
+          fi
+
   test:
+    needs: detect
+    if: needs.detect.outputs.any == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        feature: [dotfiles, mise, node, go, rust, java, ocaml, python, ansible, claude, aws-cli, gcloud]
+        feature: ${{ fromJSON(needs.detect.outputs.features) }}
     steps:
       - uses: actions/checkout@v4
 
