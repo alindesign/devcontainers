@@ -1,0 +1,22 @@
+{
+  "name": "OCaml (alindesign)",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/alindesign/features/dotfiles:1": {
+      "gitUserName": "${templateOption:gitUserName}",
+      "gitUserEmail": "${templateOption:gitUserEmail}"
+    },
+    "ghcr.io/alindesign/features/ocaml:1": {
+      "version": "${templateOption:ocamlVersion}"
+    }
+  },
+  "remoteUser": "vscode",
+  "postCreateCommand": "ocaml --version",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ocamllabs.ocaml-platform"
+      ]
+    }
+  }
+}

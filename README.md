@@ -24,6 +24,10 @@ The mise-based features (`node`, `go`, `rust`, `java`) all auto-bootstrap mise i
 | Template | ID | Stack |
 | --- | --- | --- |
 | [node](templates/src/node) | `ghcr.io/alindesign/templates/node` | Ubuntu + `dotfiles` + `node` (pnpm by default) |
+| [go](templates/src/go) | `ghcr.io/alindesign/templates/go` | Ubuntu + `dotfiles` + `go` + gopls + dlv |
+| [rust](templates/src/rust) | `ghcr.io/alindesign/templates/rust` | Ubuntu + `dotfiles` + `rust` (stable + clippy/rustfmt/rust-analyzer) |
+| [java](templates/src/java) | `ghcr.io/alindesign/templates/java` | Ubuntu + `dotfiles` + `java` (Temurin 21) + Maven |
+| [ocaml](templates/src/ocaml) | `ghcr.io/alindesign/templates/ocaml` | Ubuntu + `dotfiles` + `ocaml` (5.2.0 + dune + LSP) |
 
 ## Use in a new project
 

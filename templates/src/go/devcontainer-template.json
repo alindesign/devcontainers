@@ -1,0 +1,33 @@
+{
+  "id": "go",
+  "version": "1.0.0",
+  "name": "Go (alindesign)",
+  "description": "Ubuntu base + alindesign dotfiles (zsh, starship, CLI tools) + Go via mise.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/go",
+  "options": {
+    "goVersion": {
+      "type": "string",
+      "default": "latest",
+      "proposals": ["latest", "1.23", "1.22"],
+      "description": "Go version (passed to the go feature)."
+    },
+    "installTools": {
+      "type": "string",
+      "default": "golang.org/x/tools/gopls@latest github.com/go-delve/delve/cmd/dlv@latest",
+      "description": "Space-separated `go install` specs to install at build time."
+    },
+    "gitUserName": {
+      "type": "string",
+      "default": "",
+      "description": "git user.name (optional; can also be set after the fact)."
+    },
+    "gitUserEmail": {
+      "type": "string",
+      "default": "",
+      "description": "git user.email (optional; can also be set after the fact)."
+    }
+  },
+  "platforms": ["go"],
+  "publisher": "alindesign",
+  "keywords": ["go", "golang", "mise", "dotfiles"]
+}

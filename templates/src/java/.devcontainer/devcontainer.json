@@ -1,0 +1,25 @@
+{
+  "name": "Java (alindesign)",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/alindesign/features/dotfiles:1": {
+      "gitUserName": "${templateOption:gitUserName}",
+      "gitUserEmail": "${templateOption:gitUserEmail}"
+    },
+    "ghcr.io/alindesign/features/java:1": {
+      "version": "${templateOption:javaVersion}",
+      "installMaven": "${templateOption:installMaven}",
+      "installGradle": "${templateOption:installGradle}"
+    }
+  },
+  "remoteUser": "vscode",
+  "postCreateCommand": "java --version",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "redhat.java"
+      ]
+    }
+  }
+}

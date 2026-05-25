@@ -1,0 +1,33 @@
+{
+  "id": "rust",
+  "version": "1.0.0",
+  "name": "Rust (alindesign)",
+  "description": "Ubuntu base + alindesign dotfiles (zsh, starship, CLI tools) + Rust via mise (rustup) with clippy/rustfmt/rust-analyzer.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/rust",
+  "options": {
+    "rustVersion": {
+      "type": "string",
+      "default": "stable",
+      "proposals": ["stable", "nightly", "beta"],
+      "description": "Rust toolchain."
+    },
+    "targets": {
+      "type": "string",
+      "default": "",
+      "description": "Space-separated rustup targets (e.g. 'wasm32-unknown-unknown')."
+    },
+    "gitUserName": {
+      "type": "string",
+      "default": "",
+      "description": "git user.name (optional; can also be set after the fact)."
+    },
+    "gitUserEmail": {
+      "type": "string",
+      "default": "",
+      "description": "git user.email (optional; can also be set after the fact)."
+    }
+  },
+  "platforms": ["rust"],
+  "publisher": "alindesign",
+  "keywords": ["rust", "cargo", "mise", "dotfiles"]
+}

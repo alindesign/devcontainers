@@ -1,0 +1,23 @@
+{
+  "name": "Go (alindesign)",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/alindesign/features/dotfiles:1": {
+      "gitUserName": "${templateOption:gitUserName}",
+      "gitUserEmail": "${templateOption:gitUserEmail}"
+    },
+    "ghcr.io/alindesign/features/go:1": {
+      "version": "${templateOption:goVersion}",
+      "installTools": "${templateOption:installTools}"
+    }
+  },
+  "remoteUser": "vscode",
+  "postCreateCommand": "go version",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go"
+      ]
+    }
+  }
+}

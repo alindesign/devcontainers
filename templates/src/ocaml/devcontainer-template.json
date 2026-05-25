@@ -1,0 +1,28 @@
+{
+  "id": "ocaml",
+  "version": "1.0.0",
+  "name": "OCaml (alindesign)",
+  "description": "Ubuntu base + alindesign dotfiles (zsh, starship, CLI tools) + OCaml via opam, with dune + ocaml-lsp-server + ocamlformat.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/ocaml",
+  "options": {
+    "ocamlVersion": {
+      "type": "string",
+      "default": "5.2.0",
+      "proposals": ["5.2.0", "5.1.1", "4.14.2"],
+      "description": "OCaml compiler version for the default opam switch."
+    },
+    "gitUserName": {
+      "type": "string",
+      "default": "",
+      "description": "git user.name (optional; can also be set after the fact)."
+    },
+    "gitUserEmail": {
+      "type": "string",
+      "default": "",
+      "description": "git user.email (optional; can also be set after the fact)."
+    }
+  },
+  "platforms": ["ocaml"],
+  "publisher": "alindesign",
+  "keywords": ["ocaml", "opam", "dune", "dotfiles"]
+}

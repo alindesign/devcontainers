@@ -1,0 +1,38 @@
+{
+  "id": "java",
+  "version": "1.0.0",
+  "name": "Java (alindesign)",
+  "description": "Ubuntu base + alindesign dotfiles (zsh, starship, CLI tools) + Java (Temurin) via mise + optional Maven.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/java",
+  "options": {
+    "javaVersion": {
+      "type": "string",
+      "default": "temurin-21",
+      "proposals": ["temurin-21", "temurin-17", "temurin-11"],
+      "description": "Java distribution + version (mise spec)."
+    },
+    "installMaven": {
+      "type": "boolean",
+      "default": true,
+      "description": "Install Maven via mise."
+    },
+    "installGradle": {
+      "type": "boolean",
+      "default": false,
+      "description": "Install Gradle via mise."
+    },
+    "gitUserName": {
+      "type": "string",
+      "default": "",
+      "description": "git user.name (optional; can also be set after the fact)."
+    },
+    "gitUserEmail": {
+      "type": "string",
+      "default": "",
+      "description": "git user.email (optional; can also be set after the fact)."
+    }
+  },
+  "platforms": ["java"],
+  "publisher": "alindesign",
+  "keywords": ["java", "temurin", "maven", "gradle", "mise", "dotfiles"]
+}
