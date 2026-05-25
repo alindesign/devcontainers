@@ -1,0 +1,34 @@
+{
+  "id": "node",
+  "version": "1.0.0",
+  "name": "Node.js (alindesign)",
+  "description": "Ubuntu base + alindesign dotfiles (zsh, starship, CLI tools) + Node.js with a configurable package manager (pnpm by default).",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/node",
+  "options": {
+    "nodeVersion": {
+      "type": "string",
+      "default": "lts",
+      "proposals": ["lts", "latest", "22", "20", "18"],
+      "description": "Node version (passed to the node feature)."
+    },
+    "packageManager": {
+      "type": "string",
+      "default": "pnpm",
+      "proposals": ["pnpm", "npm", "yarn"],
+      "description": "Package manager activated by default."
+    },
+    "gitUserName": {
+      "type": "string",
+      "default": "",
+      "description": "git user.name (optional; can also be set after the fact)."
+    },
+    "gitUserEmail": {
+      "type": "string",
+      "default": "",
+      "description": "git user.email (optional; can also be set after the fact)."
+    }
+  },
+  "platforms": ["javascript", "typescript", "node"],
+  "publisher": "alindesign",
+  "keywords": ["node", "pnpm", "npm", "yarn", "typescript", "dotfiles"]
+}

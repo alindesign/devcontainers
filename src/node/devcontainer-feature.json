@@ -1,0 +1,29 @@
+{
+  "id": "node",
+  "version": "1.0.0",
+  "name": "Node.js",
+  "description": "Node.js (LTS by default) via nvm, with a configurable package manager (pnpm by default; npm or yarn supported). Package managers other than npm are activated through corepack.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/node",
+  "options": {
+    "version": {
+      "type": "string",
+      "default": "lts",
+      "proposals": ["lts", "latest", "22", "20", "18"],
+      "description": "Node version to install. Accepts 'lts', 'latest', a major (e.g. '22'), or a full version (e.g. '22.11.0')."
+    },
+    "packageManager": {
+      "type": "string",
+      "default": "pnpm",
+      "enum": ["pnpm", "npm", "yarn", "none"],
+      "description": "Package manager activated by default. 'npm' ships with Node; 'pnpm' and 'yarn' are activated through corepack. Use 'none' to leave package.json's `packageManager` field in charge."
+    },
+    "packageManagerVersion": {
+      "type": "string",
+      "default": "latest",
+      "description": "Version pinned via corepack for pnpm/yarn. Use 'latest' to skip pinning. Ignored when packageManager is 'npm' or 'none'."
+    }
+  },
+  "installsAfter": [
+    "ghcr.io/devcontainers/features/common-utils"
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "pinned-version": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "remoteUser": "vscode",
+    "features": {
+      "node": {
+        "version": "20"
+      }
+    }
+  },
+  "with-npm": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "remoteUser": "vscode",
+    "features": {
+      "node": {
+        "packageManager": "npm"
+      }
+    }
+  },
+  "with-yarn": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "remoteUser": "vscode",
+    "features": {
+      "node": {
+        "packageManager": "yarn"
+      }
+    }
+  },
+  "with-dotfiles": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "remoteUser": "vscode",
+    "features": {
+      "dotfiles": {},
+      "node": {}
+    }
+  }
+}

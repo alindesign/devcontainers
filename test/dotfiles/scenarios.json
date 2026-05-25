@@ -1,0 +1,21 @@
+{
+  "with-git-identity": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "remoteUser": "vscode",
+    "features": {
+      "dotfiles": {
+        "gitUserName": "Test User",
+        "gitUserEmail": "test@example.com"
+      }
+    }
+  },
+  "no-nvim": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "remoteUser": "vscode",
+    "features": {
+      "dotfiles": {
+        "installNvim": false
+      }
+    }
+  }
+}

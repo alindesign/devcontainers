@@ -1,0 +1,32 @@
+{
+  "id": "dotfiles",
+  "version": "1.0.0",
+  "name": "alindesign dotfiles",
+  "description": "zsh + starship + CLI tools (fd, rg, bat, fzf, jq, delta, eza, zoxide) + nvim + git config",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/dotfiles",
+  "options": {
+    "setDefaultShell": {
+      "type": "boolean",
+      "default": true,
+      "description": "Set zsh as the default shell for the remote user"
+    },
+    "gitUserName": {
+      "type": "string",
+      "default": "",
+      "description": "git config user.name (skipped if empty)"
+    },
+    "gitUserEmail": {
+      "type": "string",
+      "default": "",
+      "description": "git config user.email (skipped if empty)"
+    },
+    "installNvim": {
+      "type": "boolean",
+      "default": true,
+      "description": "Install neovim with a minimal config"
+    }
+  },
+  "installsAfter": [
+    "ghcr.io/devcontainers/features/common-utils"
+  ]
+}

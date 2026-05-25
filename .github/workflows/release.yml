@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "templates/**"
+      - ".github/workflows/release.yml"
+  workflow_dispatch:
+
+jobs:
+  publish-features:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Publish features
+        uses: devcontainers/action@v1
+        with:
+          publish-features: "true"
+          base-path-to-features: "./src"
+          generate-docs: "true"
+          oci-registry: ghcr.io
+          features-namespace: alindesign/features
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-templates:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Publish templates
+        uses: devcontainers/action@v1
+        with:
+          publish-templates: "true"
+          base-path-to-templates: "./templates/src"
+          generate-docs: "true"
+          oci-registry: ghcr.io
+          templates-namespace: alindesign/templates
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
