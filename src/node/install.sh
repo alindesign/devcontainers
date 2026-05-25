@@ -115,21 +115,15 @@ for bin in node npm npx corepack pnpm pnpx yarn; do
   fi
 done
 
-# Permissions: let the remote user use & install new node versions.
-# setgid on directories so new files inherit the group, then u/g rwX everywhere.
+# Permissions: NVM_DIR is shared between root (build time) and the remote
+# user (runtime). Some base images / devcontainer test harnesses remap the
+# remote user's UID after this script runs (e.g. vscode 1000 -> 1001), which
+# would orphan strict ownership. Make NVM_DIR world-readable/writable with
+# setgid so any user can install additional Node versions — there are no
+# secrets in here, only Node toolchains.
 chown -R "${USERNAME}:${USER_GROUP}" "${NVM_DIR}"
-chmod -R u+rwX,g+rwX,o+rX "${NVM_DIR}"
+chmod -R a+rwX "${NVM_DIR}"
 find "${NVM_DIR}" -type d -exec chmod g+s {} +
-
-# Sanity check: the remote user must be able to write to NVM_DIR so they can
-# install additional Node versions. Fail the build if not — this is silently
-# load-bearing for nvm install/use to work post-build.
-if ! sudo -u "${USERNAME}" test -w "${NVM_DIR}"; then
-  echo "node feature: ERROR — ${USERNAME} cannot write to ${NVM_DIR}" >&2
-  ls -ld "${NVM_DIR}"
-  id "${USERNAME}"
-  exit 1
-fi
 
 # --- per-user shell hooks ---------------------------------------------------
 ensure_line() {
