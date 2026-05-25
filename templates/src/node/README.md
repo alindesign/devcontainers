@@ -4,7 +4,7 @@ Bootstraps a `.devcontainer/devcontainer.json` for a Node.js project with:
 
 - `mcr.microsoft.com/devcontainers/base:ubuntu`
 - `ghcr.io/alindesign/features/dotfiles` — zsh, starship, modern CLI tools, git config
-- `ghcr.io/alindesign/features/node` — Node (LTS) via nvm + configurable package manager (pnpm by default)
+- `ghcr.io/alindesign/features/node:2` — Node (LTS) via mise + configurable package manager (pnpm by default)
 
 ## Apply
 

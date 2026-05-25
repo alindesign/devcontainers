@@ -222,9 +222,9 @@ if command -v starship >/dev/null 2>&1; then
   eval "$(starship init zsh)"
 fi
 
-# Node (nvm) — populated by the node feature when installed.
-export NVM_DIR="${NVM_DIR:-/usr/local/share/nvm}"
-[ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
+# mise — populated by node/go/rust/java features when installed.
+export MISE_DATA_DIR="${MISE_DATA_DIR:-/usr/local/share/mise}"
+command -v mise >/dev/null 2>&1 && eval "$(mise activate zsh)"
 
 # Local overrides
 [ -f "$HOME/.zshrc.local" ] && source "$HOME/.zshrc.local"

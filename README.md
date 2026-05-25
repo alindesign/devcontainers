@@ -6,20 +6,30 @@ Reusable [Dev Container Features](https://containers.dev/implementors/features/)
 
 | Feature | ID | Purpose |
 | --- | --- | --- |
-| dotfiles | `ghcr.io/alindesign/features/dotfiles:1` | zsh + starship + CLI tools (fd, rg, bat, fzf, jq, delta, eza, zoxide) + nvim + git config |
-| node | `ghcr.io/alindesign/features/node:1` | Node.js (LTS by default) via `nvm` + configurable package manager (pnpm/npm/yarn; pnpm default) |
+| [dotfiles](src/dotfiles) | `ghcr.io/alindesign/features/dotfiles:1` | zsh + starship + CLI tools (fd, rg, bat, fzf, jq, delta, eza, zoxide) + nvim + git config |
+| [mise](src/mise) | `ghcr.io/alindesign/features/mise:1` | [mise](https://mise.jdx.dev) toolchain manager, shared install at `/usr/local/share/mise` |
+| [node](src/node) | `ghcr.io/alindesign/features/node:2` | Node.js via mise + package manager (pnpm/npm/yarn; pnpm default) |
+| [go](src/go) | `ghcr.io/alindesign/features/go:1` | Go via mise, optional `go install` tools |
+| [rust](src/rust) | `ghcr.io/alindesign/features/rust:1` | Rust via mise (rustup) with components + targets |
+| [java](src/java) | `ghcr.io/alindesign/features/java:1` | Java (Temurin) via mise + optional Maven/Gradle |
+| [ocaml](src/ocaml) | `ghcr.io/alindesign/features/ocaml:1` | OCaml via opam (mise has no first-class OCaml plugin) |
+| [claude](src/claude) | `ghcr.io/alindesign/features/claude:1` | Claude Code CLI via npm, mounts `~/.claude` from host |
+| [aws-cli](src/aws-cli) | `ghcr.io/alindesign/features/aws-cli:1` | AWS CLI v2 from the official installer, mounts `~/.aws` from host |
+| [gcloud](src/gcloud) | `ghcr.io/alindesign/features/gcloud:1` | gcloud CLI via Google apt repo, mounts `~/.config/gcloud` from host |
+
+The mise-based features (`node`, `go`, `rust`, `java`) all auto-bootstrap mise if you don't add the `mise` feature explicitly — they share the same `MISE_DATA_DIR` so adding more is incremental and cheap.
 
 ## Templates
 
 | Template | ID | Stack |
 | --- | --- | --- |
-| node | `ghcr.io/alindesign/templates/node` | Ubuntu + `dotfiles` + `node` (pnpm by default) |
+| [node](templates/src/node) | `ghcr.io/alindesign/templates/node` | Ubuntu + `dotfiles` + `node` (pnpm by default) |
 
 ## Use in a new project
 
 ### From VS Code
 
-`Dev Containers: New Dev Container...` → pick `alindesign/node`.
+`Dev Containers: New Dev Container...` → pick a template from `alindesign/...`.
 
 ### From CLI
 
@@ -29,20 +39,26 @@ npx -y @devcontainers/cli templates apply \
   --workspace-folder .
 ```
 
-### Manual `devcontainer.json`
+### Manual `devcontainer.json` — compose features
 
-Compose features on any base image:
+Pick exactly what you need:
 
 ```jsonc
 {
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
   "features": {
     "ghcr.io/alindesign/features/dotfiles:1": {},
-    "ghcr.io/alindesign/features/node:1": { "version": "lts", "packageManager": "pnpm" }
+    "ghcr.io/alindesign/features/node:2": { "packageManager": "pnpm" },
+    "ghcr.io/alindesign/features/go:1": { "version": "1.23" },
+    "ghcr.io/alindesign/features/claude:1": {},
+    "ghcr.io/alindesign/features/aws-cli:1": {},
+    "ghcr.io/alindesign/features/gcloud:1": {}
   },
   "remoteUser": "vscode"
 }
 ```
+
+Features that integrate with host-side accounts (`claude`, `aws-cli`, `gcloud`) declare static `mounts` in their manifest, so adding the feature automatically wires `~/.claude`, `~/.aws`, `~/.config/gcloud` from the host. The mount targets assume `remoteUser: vscode`; override in your `devcontainer.json` if you use a different user.
 
 ## Repo layout
 
@@ -57,10 +73,10 @@ templates/src/             devcontainer templates
 
 ```bash
 # Test a single feature
-devcontainer features test --features dotfiles --base-image mcr.microsoft.com/devcontainers/base:ubuntu .
+devcontainer features test --features node --base-image mcr.microsoft.com/devcontainers/base:ubuntu .
 
-# Test a template
-devcontainer templates apply -t ./templates/src/node -w /tmp/scratch
+# Test a template (only after publishing — CLI needs an OCI ref, not a path)
+devcontainer templates apply -t ghcr.io/alindesign/templates/node:latest -w /tmp/scratch
 ```
 
 Requires the [`devcontainer` CLI](https://github.com/devcontainers/cli):
@@ -73,8 +89,10 @@ npm install -g @devcontainers/cli
 
 ## Release
 
-Tag a release, GH Actions publishes features and templates to `ghcr.io/alindesign/...`.
+Every push to `main` triggers `.github/workflows/release.yml`, which publishes any changed features and templates to `ghcr.io/alindesign/...` (versions come from each feature/template manifest).
 
 ```bash
-git tag v1.0.0 && git push --tags
+# Bump a feature's version, then:
+git commit -am "feat(node): ..."
+git push
 ```

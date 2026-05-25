@@ -6,7 +6,7 @@
       "gitUserName": "${templateOption:gitUserName}",
       "gitUserEmail": "${templateOption:gitUserEmail}"
     },
-    "ghcr.io/alindesign/features/node:1": {
+    "ghcr.io/alindesign/features/node:2": {
       "version": "${templateOption:nodeVersion}",
       "packageManager": "${templateOption:packageManager}"
     }

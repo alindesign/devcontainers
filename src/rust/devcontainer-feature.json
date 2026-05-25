@@ -1,0 +1,28 @@
+{
+  "id": "rust",
+  "version": "1.0.0",
+  "name": "Rust",
+  "description": "Rust toolchain via mise (rustup under the hood). Auto-bootstraps mise if not already installed.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/rust",
+  "options": {
+    "version": {
+      "type": "string",
+      "default": "stable",
+      "proposals": ["stable", "nightly", "beta"],
+      "description": "Rust toolchain. 'stable', 'nightly', 'beta', or a specific version like '1.83'."
+    },
+    "components": {
+      "type": "string",
+      "default": "clippy rustfmt rust-analyzer",
+      "description": "Space-separated rustup components to install."
+    },
+    "targets": {
+      "type": "string",
+      "default": "",
+      "description": "Space-separated rustup targets to add (e.g. 'wasm32-unknown-unknown x86_64-unknown-linux-musl')."
+    }
+  },
+  "installsAfter": [
+    "ghcr.io/devcontainers/features/common-utils"
+  ]
+}

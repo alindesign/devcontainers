@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Feature: node
-# Installs Node via nvm into a system-wide NVM_DIR=/usr/local/share/nvm
+# Installs Node via mise into a shared MISE_DATA_DIR=/usr/local/share/mise
 # and activates the requested package manager (pnpm by default).
 set -euo pipefail
 
-NODE_VERSION="${VERSION:-lts}"
+NODE_VERSION_INPUT="${VERSION:-lts}"
 PACKAGE_MANAGER="${PACKAGEMANAGER:-pnpm}"
 PACKAGE_MANAGER_VERSION="${PACKAGEMANAGERVERSION:-latest}"
 
@@ -45,33 +45,45 @@ apt-get install -y --no-install-recommends ca-certificates curl git build-essent
 apt-get clean
 rm -rf /var/lib/apt/lists/*
 
-# --- nvm (system-wide) ------------------------------------------------------
-export NVM_DIR="/usr/local/share/nvm"
-install -d -m 0775 "${NVM_DIR}"
+# --- bootstrap mise (idempotent; the `mise` feature may have already done it)
+export MISE_DATA_DIR="/usr/local/share/mise"
+install -d -m 0775 "${MISE_DATA_DIR}"
 
-if [ ! -s "${NVM_DIR}/nvm.sh" ]; then
-  NVM_TAG="$(curl -fsSL https://api.github.com/repos/nvm-sh/nvm/releases/latest | sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1)"
-  if [ -z "${NVM_TAG}" ]; then NVM_TAG="v0.40.1"; fi
-  curl -fsSL "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_TAG}/install.sh" \
-    | PROFILE=/dev/null bash
+if ! command -v mise >/dev/null 2>&1; then
+  curl -fsSL https://mise.run | MISE_INSTALL_PATH=/usr/local/bin/mise sh
 fi
 
-# shellcheck disable=SC1091
-. "${NVM_DIR}/nvm.sh"
+if [ ! -f /etc/profile.d/mise.sh ]; then
+  cat > /etc/profile.d/mise.sh <<EOF
+export MISE_DATA_DIR="${MISE_DATA_DIR}"
+EOF
+  chmod 0644 /etc/profile.d/mise.sh
+fi
 
-case "${NODE_VERSION}" in
-  lts|LTS|"")          nvm install --lts --latest-npm; nvm alias default 'lts/*' ;;
-  latest|node|current) nvm install node --latest-npm; nvm alias default node ;;
-  *)                   nvm install "${NODE_VERSION}" --latest-npm; nvm alias default "${NODE_VERSION}" ;;
+mise --version
+
+# --- resolve & install Node via mise ----------------------------------------
+case "${NODE_VERSION_INPUT}" in
+  lts|LTS|"")          MISE_NODE_SPEC="node@lts" ;;
+  latest|node|current) MISE_NODE_SPEC="node@latest" ;;
+  *)                   MISE_NODE_SPEC="node@${NODE_VERSION_INPUT}" ;;
 esac
-nvm use default
-NODE_CURRENT="$(nvm version default)"
-echo "node feature: node ${NODE_CURRENT} installed"
+
+mise use --global "${MISE_NODE_SPEC}"
+mise install "${MISE_NODE_SPEC}"
+
+NODE_BIN_DIR="$(mise where "${MISE_NODE_SPEC}")/bin"
+if [ ! -x "${NODE_BIN_DIR}/node" ]; then
+  echo "node feature: ERROR — could not resolve installed Node bin dir (${NODE_BIN_DIR})" >&2
+  exit 1
+fi
+echo "node feature: node $("${NODE_BIN_DIR}/node" --version) installed via mise"
 
 # --- package manager via corepack ------------------------------------------
 # Only enable shims for the requested package manager so PATH stays
 # predictable. `none` enables all shims and lets package.json#packageManager
 # decide via corepack at runtime.
+export PATH="${NODE_BIN_DIR}:${PATH}"
 case "${PACKAGE_MANAGER}" in
   pnpm)
     corepack enable pnpm
@@ -97,17 +109,7 @@ case "${PACKAGE_MANAGER}" in
     ;;
 esac
 
-# --- expose to PATH for login + non-login shells ----------------------------
-PROFILE_SNIPPET="/etc/profile.d/nvm.sh"
-cat > "${PROFILE_SNIPPET}" <<EOF
-export NVM_DIR="${NVM_DIR}"
-[ -s "\$NVM_DIR/nvm.sh" ] && \\. "\$NVM_DIR/nvm.sh"
-[ -s "\$NVM_DIR/bash_completion" ] && \\. "\$NVM_DIR/bash_completion"
-EOF
-chmod 0644 "${PROFILE_SNIPPET}"
-
-# Ensure non-interactive shells (RUN steps, scripts) find node/pm via symlinks.
-NODE_BIN_DIR="$(dirname "$(nvm which default)")"
+# --- expose to PATH for non-login shells (RUN steps, CI) --------------------
 for bin in node npm npx corepack pnpm pnpx yarn; do
   src="${NODE_BIN_DIR}/${bin}"
   if [ -x "${src}" ]; then
@@ -115,17 +117,12 @@ for bin in node npm npx corepack pnpm pnpx yarn; do
   fi
 done
 
-# Permissions: NVM_DIR is shared between root (build time) and the remote
-# user (runtime). Some base images / devcontainer test harnesses remap the
-# remote user's UID after this script runs (e.g. vscode 1000 -> 1001), which
-# would orphan strict ownership. Make NVM_DIR world-readable/writable with
-# setgid so any user can install additional Node versions — there are no
-# secrets in here, only Node toolchains.
-chown -R "${USERNAME}:${USER_GROUP}" "${NVM_DIR}"
-chmod -R a+rwX "${NVM_DIR}"
-find "${NVM_DIR}" -type d -exec chmod g+s {} +
+# --- permissions on mise data dir (survives UID remap) ----------------------
+chown -R "${USERNAME}:${USER_GROUP}" "${MISE_DATA_DIR}"
+chmod -R a+rwX "${MISE_DATA_DIR}"
+find "${MISE_DATA_DIR}" -type d -exec chmod g+s {} +
 
-# --- per-user shell hooks ---------------------------------------------------
+# --- per-user shell activation for mise -------------------------------------
 ensure_line() {
   local file="$1" line="$2"
   touch "${file}"
@@ -135,10 +132,13 @@ ensure_line() {
 
 if [ "${USERNAME}" != "root" ]; then
   USER_HOME="$(getent passwd "${USERNAME}" | cut -d: -f6)"
-  for rc in "${USER_HOME}/.bashrc" "${USER_HOME}/.zshrc"; do
-    ensure_line "${rc}" "export NVM_DIR=\"${NVM_DIR}\""
-    ensure_line "${rc}" '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"'
-  done
+  ensure_line "${USER_HOME}/.bashrc" "export MISE_DATA_DIR=\"${MISE_DATA_DIR}\""
+  ensure_line "${USER_HOME}/.bashrc" 'eval "$(mise activate bash)"'
+
+  if [ -f "${USER_HOME}/.zshrc" ] || command -v zsh >/dev/null 2>&1; then
+    ensure_line "${USER_HOME}/.zshrc" "export MISE_DATA_DIR=\"${MISE_DATA_DIR}\""
+    ensure_line "${USER_HOME}/.zshrc" 'eval "$(mise activate zsh)"'
+  fi
 fi
 
 echo "node feature: done"

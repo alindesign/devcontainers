@@ -1,0 +1,23 @@
+{
+  "id": "go",
+  "version": "1.0.0",
+  "name": "Go",
+  "description": "Go via mise. Auto-bootstraps mise if not already installed.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/go",
+  "options": {
+    "version": {
+      "type": "string",
+      "default": "latest",
+      "proposals": ["latest", "1.23", "1.22"],
+      "description": "Go version. 'latest' or a specific version like '1.23' / '1.23.4'."
+    },
+    "installTools": {
+      "type": "string",
+      "default": "",
+      "description": "Space-separated list of additional Go tools to `go install` (e.g. 'golang.org/x/tools/gopls@latest github.com/go-delve/delve/cmd/dlv@latest'). Empty to skip."
+    }
+  },
+  "installsAfter": [
+    "ghcr.io/devcontainers/features/common-utils"
+  ]
+}

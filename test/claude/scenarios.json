@@ -1,0 +1,10 @@
+{
+  "with-node-feature": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "remoteUser": "vscode",
+    "features": {
+      "node": {},
+      "claude": {}
+    }
+  }
+}

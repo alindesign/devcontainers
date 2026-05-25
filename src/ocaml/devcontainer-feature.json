@@ -1,0 +1,23 @@
+{
+  "id": "ocaml",
+  "version": "1.0.0",
+  "name": "OCaml",
+  "description": "OCaml via opam (mise has no first-class OCaml plugin). Installs opam, initializes an opam root at /usr/local/share/opam, and creates a switch with the requested compiler version.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/ocaml",
+  "options": {
+    "version": {
+      "type": "string",
+      "default": "5.2.0",
+      "proposals": ["5.2.0", "5.1.1", "4.14.2"],
+      "description": "OCaml compiler version for the default switch."
+    },
+    "installDuneAndLsp": {
+      "type": "boolean",
+      "default": true,
+      "description": "Install `dune`, `ocaml-lsp-server`, and `ocamlformat` into the default switch."
+    }
+  },
+  "installsAfter": [
+    "ghcr.io/devcontainers/features/common-utils"
+  ]
+}

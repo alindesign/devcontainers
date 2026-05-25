@@ -1,0 +1,22 @@
+{
+  "id": "mise",
+  "version": "1.0.0",
+  "name": "mise",
+  "description": "Installs mise (https://mise.jdx.dev) system-wide as the toolchain version manager. Other features in this repo (node, go, rust, java) layer on top of this.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/mise",
+  "options": {
+    "version": {
+      "type": "string",
+      "default": "latest",
+      "description": "mise version to install. 'latest' or a specific tag like '2024.11.0'."
+    },
+    "autoActivate": {
+      "type": "boolean",
+      "default": true,
+      "description": "Add `mise activate` to the remote user's bash and zsh rc files."
+    }
+  },
+  "installsAfter": [
+    "ghcr.io/devcontainers/features/common-utils"
+  ]
+}

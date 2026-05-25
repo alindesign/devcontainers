@@ -1,0 +1,28 @@
+{
+  "id": "java",
+  "version": "1.0.0",
+  "name": "Java",
+  "description": "Java (Temurin by default) via mise. Auto-bootstraps mise if not already installed.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/java",
+  "options": {
+    "version": {
+      "type": "string",
+      "default": "temurin-21",
+      "proposals": ["temurin-21", "temurin-17", "temurin-11", "21", "17"],
+      "description": "Java version spec for mise. e.g. 'temurin-21', 'corretto-17', 'openjdk-21', or just '21'."
+    },
+    "installMaven": {
+      "type": "boolean",
+      "default": false,
+      "description": "Also install Maven via mise."
+    },
+    "installGradle": {
+      "type": "boolean",
+      "default": false,
+      "description": "Also install Gradle via mise."
+    }
+  },
+  "installsAfter": [
+    "ghcr.io/devcontainers/features/common-utils"
+  ]
+}

@@ -1,11 +1,13 @@
 # node
 
-Node.js via `nvm` (system-wide install at `/usr/local/share/nvm`) with a configurable package manager. `pnpm` is the default; `npm` and `yarn` are supported. Package managers other than `npm` are activated through `corepack`.
+Node.js via [mise](https://mise.jdx.dev), with a configurable package manager. `pnpm` is the default; `npm` and `yarn` are supported. Package managers other than `npm` are activated through `corepack`.
 
-## Why nvm + corepack
+## Why mise + corepack
 
-- `nvm` lets the project bump or pin Node versions later without rebuilding the image.
+- `mise` lets the project bump or pin Node versions later (and other toolchains) via a single `.mise.toml` without rebuilding the image.
 - `corepack` is the [official Node.js way](https://nodejs.org/api/corepack.html) to manage `pnpm`/`yarn` versions per project — pin via `packageManager` in `package.json` and corepack honors it.
+
+The feature auto-installs mise if the [`mise` feature](https://github.com/alindesign/devcontainers/tree/main/src/mise) is not already present, so it works standalone.
 
 ## Options
 
@@ -43,7 +45,7 @@ Switch package manager:
 
 ## Notes
 
-- Installs `node`, `npm`, `npx`, plus the activated package manager as symlinks under `/usr/local/bin` so non-login shells (`RUN` steps, scripts, CI) see them without sourcing `nvm.sh`.
-- Login/interactive shells (bash, zsh) get `nvm` itself, so `nvm install 20`, `nvm use 22` etc. work inside the container.
-- `NVM_DIR` is group-writable so the remote user can install additional Node versions.
-- Composes cleanly with the `dotfiles` feature — `dotfiles` already sources `NVM_DIR` in its `.zshrc`.
+- Installs `node`, `npm`, `npx`, plus the activated package manager as symlinks under `/usr/local/bin` so non-login shells (`RUN` steps, scripts, CI) see them without invoking mise.
+- Interactive shells (bash, zsh) get `mise activate`, so `mise use node@20`, `mise install go@1.23`, etc. work inside the container.
+- `MISE_DATA_DIR=/usr/local/share/mise` is world-writable so the remote user can install additional tools (this survives UID remapping that some test harnesses perform).
+- Composes with the `dotfiles` feature — `dotfiles` writes its own `.zshrc` first, this feature appends mise activation idempotently.

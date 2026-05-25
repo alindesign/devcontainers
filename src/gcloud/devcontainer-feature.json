@@ -1,0 +1,24 @@
+{
+  "id": "gcloud",
+  "version": "1.0.0",
+  "name": "Google Cloud CLI",
+  "description": "Installs gcloud CLI via Google's official apt repository. Optionally mounts ~/.config/gcloud from the host so existing logins / projects are reused.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/gcloud",
+  "options": {
+    "installComponents": {
+      "type": "string",
+      "default": "",
+      "description": "Space-separated additional gcloud components to install (e.g. 'kubectl gke-gcloud-auth-plugin terraform-tools')."
+    }
+  },
+  "mounts": [
+    {
+      "source": "${localEnv:HOME}/.config/gcloud",
+      "target": "/home/vscode/.config/gcloud",
+      "type": "bind"
+    }
+  ],
+  "installsAfter": [
+    "ghcr.io/devcontainers/features/common-utils"
+  ]
+}

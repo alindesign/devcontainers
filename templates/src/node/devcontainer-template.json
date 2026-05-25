@@ -2,7 +2,7 @@
   "id": "node",
   "version": "1.0.0",
   "name": "Node.js (alindesign)",
-  "description": "Ubuntu base + alindesign dotfiles (zsh, starship, CLI tools) + Node.js with a configurable package manager (pnpm by default).",
+  "description": "Ubuntu base + alindesign dotfiles (zsh, starship, CLI tools) + Node.js (via mise) with a configurable package manager (pnpm by default).",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/node",
   "options": {
     "nodeVersion": {
