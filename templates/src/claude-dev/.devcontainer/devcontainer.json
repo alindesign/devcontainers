@@ -1,33 +1,30 @@
 {
-  "name": "Node.js (alindesign)",
+  "name": "Claude Dev (alindesign)",
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
   "features": {
     "ghcr.io/alindesign/features/dotfiles:1": {
-      "gitUserName": "Your Name",
-      "gitUserEmail": "you@example.com"
+      "gitUserName": "${templateOption:gitUserName}",
+      "gitUserEmail": "${templateOption:gitUserEmail}"
     },
-    "ghcr.io/alindesign/features/claude:1": {},
     "ghcr.io/alindesign/features/node:2": {
-      "version": "lts",
-      "packageManager": "pnpm"
-    }
+      "version": "${templateOption:nodeVersion}",
+      "packageManager": "${templateOption:packageManager}"
+    },
+    "ghcr.io/alindesign/features/claude:1": {}
   },
   "remoteUser": "vscode",
   "initializeCommand": "sh -c '[ \"$(uname)\" != Darwin ] || { mkdir -p \"$HOME/.claude\" && security find-generic-password -s \"Claude Code-credentials\" -w 2>/dev/null > \"$HOME/.claude/.credentials.json\" && chmod 600 \"$HOME/.claude/.credentials.json\"; } || true'",
   "mounts": [
-    { "source": "${localEnv:HOME}/.ssh", "target": "/home/vscode/.ssh", "type": "bind" },
-    { "source": "${localEnv:HOME}/.gnupg", "target": "/home/vscode/.gnupg", "type": "bind" },
     { "source": "${localEnv:HOME}/.claude", "target": "/home/vscode/.claude", "type": "bind" },
     { "source": "${localEnv:HOME}/.claude.json", "target": "/home/vscode/.claude.json", "type": "bind" }
   ],
-  "postCreateCommand": "node --version && pnpm --version",
+  "postCreateCommand": "claude --version && node --version",
   "customizations": {
     "vscode": {
       "extensions": [
+        "anthropic.claude-code",
         "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
-        "bradlc.vscode-tailwindcss",
-        "ms-vscode.vscode-typescript-next"
+        "esbenp.prettier-vscode"
       ]
     }
   }

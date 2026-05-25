@@ -1,0 +1,27 @@
+{
+  "id": "cloud-ops",
+  "version": "1.0.0",
+  "name": "Cloud Ops (alindesign)",
+  "description": "Ubuntu + alindesign dotfiles + AWS CLI v2 + gcloud CLI, with host `~/.aws` and `~/.config/gcloud` mounted so the container reuses your host credentials and project settings.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/cloud-ops",
+  "options": {
+    "gcloudComponents": {
+      "type": "string",
+      "default": "",
+      "description": "Space-separated extra gcloud components to install (e.g. 'kubectl gke-gcloud-auth-plugin')."
+    },
+    "gitUserName": {
+      "type": "string",
+      "default": "",
+      "description": "git user.name (optional)."
+    },
+    "gitUserEmail": {
+      "type": "string",
+      "default": "",
+      "description": "git user.email (optional)."
+    }
+  },
+  "platforms": ["aws", "gcp", "shell"],
+  "publisher": "alindesign",
+  "keywords": ["aws", "gcloud", "cloud", "devops", "iac", "dotfiles"]
+}

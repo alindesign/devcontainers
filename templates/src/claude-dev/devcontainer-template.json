@@ -1,0 +1,34 @@
+{
+  "id": "claude-dev",
+  "version": "1.0.0",
+  "name": "Claude Dev (alindesign)",
+  "description": "Ubuntu + alindesign dotfiles + Node.js (mise) + Claude Code CLI, with host `~/.claude` and `~/.claude.json` mounted so the container reuses your host login, history, and settings.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/claude-dev",
+  "options": {
+    "nodeVersion": {
+      "type": "string",
+      "default": "lts",
+      "proposals": ["lts", "latest", "22", "20"],
+      "description": "Node version for the node feature."
+    },
+    "packageManager": {
+      "type": "string",
+      "default": "pnpm",
+      "proposals": ["pnpm", "npm", "yarn"],
+      "description": "Default package manager activated via corepack."
+    },
+    "gitUserName": {
+      "type": "string",
+      "default": "",
+      "description": "git user.name (optional)."
+    },
+    "gitUserEmail": {
+      "type": "string",
+      "default": "",
+      "description": "git user.email (optional)."
+    }
+  },
+  "platforms": ["javascript", "typescript", "node"],
+  "publisher": "alindesign",
+  "keywords": ["claude", "claude-code", "node", "pnpm", "dotfiles"]
+}

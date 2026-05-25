@@ -1,0 +1,29 @@
+{
+  "name": "Cloud Ops (alindesign)",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/alindesign/features/dotfiles:1": {
+      "gitUserName": "${templateOption:gitUserName}",
+      "gitUserEmail": "${templateOption:gitUserEmail}"
+    },
+    "ghcr.io/alindesign/features/aws-cli:1": {},
+    "ghcr.io/alindesign/features/gcloud:1": {
+      "installComponents": "${templateOption:gcloudComponents}"
+    }
+  },
+  "remoteUser": "vscode",
+  "mounts": [
+    { "source": "${localEnv:HOME}/.aws", "target": "/home/vscode/.aws", "type": "bind" },
+    { "source": "${localEnv:HOME}/.config/gcloud", "target": "/home/vscode/.config/gcloud", "type": "bind" }
+  ],
+  "postCreateCommand": "aws --version && gcloud --version | head -n1",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "amazonwebservices.aws-toolkit-vscode",
+        "googlecloudtools.cloudcode",
+        "hashicorp.terraform"
+      ]
+    }
+  }
+}

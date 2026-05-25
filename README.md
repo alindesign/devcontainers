@@ -28,6 +28,8 @@ The mise-based features (`node`, `go`, `rust`, `java`) all auto-bootstrap mise i
 | [rust](templates/src/rust) | `ghcr.io/alindesign/templates/rust` | Ubuntu + `dotfiles` + `rust` (stable + clippy/rustfmt/rust-analyzer) |
 | [java](templates/src/java) | `ghcr.io/alindesign/templates/java` | Ubuntu + `dotfiles` + `java` (Temurin 21) + Maven |
 | [ocaml](templates/src/ocaml) | `ghcr.io/alindesign/templates/ocaml` | Ubuntu + `dotfiles` + `ocaml` (5.2.0 + dune + LSP) |
+| [claude-dev](templates/src/claude-dev) | `ghcr.io/alindesign/templates/claude-dev` | Ubuntu + `dotfiles` + `node` + `claude` + mounts `~/.claude` + `~/.claude.json` |
+| [cloud-ops](templates/src/cloud-ops) | `ghcr.io/alindesign/templates/cloud-ops` | Ubuntu + `dotfiles` + `aws-cli` + `gcloud` + mounts `~/.aws` + `~/.config/gcloud` |
 
 ## Use in a new project
 
