@@ -1,7 +1,6 @@
 # Go (alindesign) — devcontainer template
 
-- `mcr.microsoft.com/devcontainers/base:ubuntu`
-- `ghcr.io/alindesign/features/dotfiles` — zsh, starship, modern CLI tools, git config
+- `ghcr.io/alindesign/devcontainer-base:latest` — Ubuntu base with `dotfiles` + `mise` pre-installed
 - `ghcr.io/alindesign/features/go:1` — Go via mise
 
 ## Apply

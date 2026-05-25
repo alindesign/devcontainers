@@ -2,8 +2,7 @@
 
 For DevOps / IaC / cloud scripting projects. Bundles AWS CLI v2 + gcloud CLI on top of dotfiles, with host credentials mounted in so `aws` and `gcloud` work without re-authenticating in the container.
 
-- `mcr.microsoft.com/devcontainers/base:ubuntu`
-- `ghcr.io/alindesign/features/dotfiles` — zsh, starship, CLI tools, git config
+- `ghcr.io/alindesign/devcontainer-base:latest` — Ubuntu base with `dotfiles` + `mise` pre-installed
 - `ghcr.io/alindesign/features/aws-cli:1` — AWS CLI v2
 - `ghcr.io/alindesign/features/gcloud:1` — gcloud CLI (optional components via `gcloudComponents`)
 - Host mounts:

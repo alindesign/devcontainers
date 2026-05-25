@@ -2,8 +2,7 @@
 
 Bootstraps a `.devcontainer/devcontainer.json` for a project where you work with [Claude Code](https://docs.claude.com/en/docs/claude-code) inside a container. Your host login and history come along via bind mounts.
 
-- `mcr.microsoft.com/devcontainers/base:ubuntu`
-- `ghcr.io/alindesign/features/dotfiles` — zsh, starship, CLI tools, git config
+- `ghcr.io/alindesign/devcontainer-base:latest` — Ubuntu base with `dotfiles` + `mise` pre-installed
 - `ghcr.io/alindesign/features/node:2` — Node.js via mise + configurable package manager (pnpm by default)
 - `ghcr.io/alindesign/features/claude:1` — Claude Code CLI
 - Host mounts:

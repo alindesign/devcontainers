@@ -1,7 +1,6 @@
 # Ansible (alindesign) — devcontainer template
 
-- `mcr.microsoft.com/devcontainers/base:ubuntu`
-- `ghcr.io/alindesign/features/dotfiles` — zsh, starship, CLI tools, git config
+- `ghcr.io/alindesign/devcontainer-base:latest` — Ubuntu base with `dotfiles` + `mise` pre-installed
 - `ghcr.io/alindesign/features/python:1` — Python (mise + uv)
 - `ghcr.io/alindesign/features/ansible:1` — Ansible + ansible-lint via `uv tool`
 

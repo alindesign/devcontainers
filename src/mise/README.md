@@ -20,7 +20,7 @@ System-wide install of [mise](https://mise.jdx.dev) — a polyglot toolchain ver
 
 ```jsonc
 {
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "image": "ghcr.io/alindesign/devcontainer-base:latest",
   "features": {
     "ghcr.io/alindesign/features/mise:1": {}
   }

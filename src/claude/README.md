@@ -26,9 +26,9 @@ This isn't declared in the feature manifest because `bind` mounts fail at startu
 
 ```jsonc
 {
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "image": "ghcr.io/alindesign/devcontainer-base:latest",
   "features": {
-    "ghcr.io/alindesign/features/node:1": {},
+    "ghcr.io/alindesign/features/node:2": {},
     "ghcr.io/alindesign/features/claude:1": {}
   },
   "remoteUser": "vscode"

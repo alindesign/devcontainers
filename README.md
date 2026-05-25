@@ -79,9 +79,8 @@ Pick exactly what you need:
 
 ```jsonc
 {
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "image": "ghcr.io/alindesign/devcontainer-base:latest",
   "features": {
-    "ghcr.io/alindesign/features/dotfiles:1": {},
     "ghcr.io/alindesign/features/node:2": { "packageManager": "pnpm" },
     "ghcr.io/alindesign/features/go:1": { "version": "1.23" },
     "ghcr.io/alindesign/features/claude:1": {},
@@ -91,6 +90,8 @@ Pick exactly what you need:
   "remoteUser": "vscode"
 }
 ```
+
+`dotfiles` + `mise` are pre-baked into `devcontainer-base` — don't add them as features unless you want to override a setting.
 
 Features that integrate with host-side accounts (`claude`, `aws-cli`, `gcloud`) declare static `mounts` in their manifest, so adding the feature automatically wires `~/.claude`, `~/.aws`, `~/.config/gcloud` from the host. The mount targets assume `remoteUser: vscode`; override in your `devcontainer.json` if you use a different user.
 

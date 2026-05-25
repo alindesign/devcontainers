@@ -1,7 +1,6 @@
 # OCaml (alindesign) — devcontainer template
 
-- `mcr.microsoft.com/devcontainers/base:ubuntu`
-- `ghcr.io/alindesign/features/dotfiles` — zsh, starship, modern CLI tools, git config
+- `ghcr.io/alindesign/devcontainer-base:latest` — Ubuntu base with `dotfiles` + `mise` pre-installed
 - `ghcr.io/alindesign/features/ocaml:1` — OCaml via opam + dune + ocaml-lsp-server + ocamlformat
 
 ## Apply

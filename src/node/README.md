@@ -23,7 +23,7 @@ The feature auto-installs mise if the [`mise` feature](https://github.com/alinde
 
 ```jsonc
 {
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "image": "ghcr.io/alindesign/devcontainer-base:latest",
   "features": {
     "ghcr.io/alindesign/features/node:1": {
       "version": "lts",

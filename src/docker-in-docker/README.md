@@ -15,7 +15,7 @@ Docker Engine (CE) + buildx + Compose v2 inside the container. The daemon starts
 
 ```jsonc
 {
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "image": "ghcr.io/alindesign/devcontainer-base:latest",
   "features": {
     "ghcr.io/alindesign/features/docker-in-docker:1": {}
   },

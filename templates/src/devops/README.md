@@ -2,8 +2,7 @@
 
 The full IaC + DevOps toolbox in one container.
 
-- `mcr.microsoft.com/devcontainers/base:ubuntu`
-- `dotfiles` — zsh, starship, CLI tools, git config
+- `ghcr.io/alindesign/devcontainer-base:latest` — Ubuntu base with `dotfiles` + `mise` pre-installed
 - `python` (uv) — for ansible & scripting
 - `ansible` (+ ansible-lint) — playbooks
 - `aws-cli` + host mount `~/.aws`

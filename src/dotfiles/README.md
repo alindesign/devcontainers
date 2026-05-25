@@ -32,7 +32,7 @@ Existing `~/.gitconfig` is preserved. Local overrides for zsh go in `~/.zshrc.lo
 
 ```jsonc
 {
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "image": "ghcr.io/alindesign/devcontainer-base:latest",
   "features": {
     "ghcr.io/alindesign/features/dotfiles:1": {
       "gitUserName": "Your Name",

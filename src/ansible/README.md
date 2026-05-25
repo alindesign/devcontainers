@@ -14,7 +14,7 @@ Installs [Ansible](https://docs.ansible.com) (and optionally [ansible-lint](http
 
 ```jsonc
 {
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "image": "ghcr.io/alindesign/devcontainer-base:latest",
   "features": {
     "ghcr.io/alindesign/features/python:1": { "packageManager": "uv" },
     "ghcr.io/alindesign/features/ansible:1": {

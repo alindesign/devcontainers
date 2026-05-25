@@ -1,7 +1,6 @@
 # Java (alindesign) — devcontainer template
 
-- `mcr.microsoft.com/devcontainers/base:ubuntu`
-- `ghcr.io/alindesign/features/dotfiles` — zsh, starship, modern CLI tools, git config
+- `ghcr.io/alindesign/devcontainer-base:latest` — Ubuntu base with `dotfiles` + `mise` pre-installed
 - `ghcr.io/alindesign/features/java:1` — Java via mise + optional Maven/Gradle
 
 ## Apply
