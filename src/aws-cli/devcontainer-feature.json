@@ -1,8 +1,8 @@
 {
   "id": "aws-cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "name": "AWS CLI v2",
-  "description": "Installs the official AWS CLI v2 binary. Optionally mounts ~/.aws from the host so existing credentials/profiles are reused.",
+  "description": "Installs the official AWS CLI v2 binary. Mount ~/.aws from the host in your devcontainer.json to reuse host credentials (see README).",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/aws-cli",
   "options": {
     "version": {

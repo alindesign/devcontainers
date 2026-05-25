@@ -1,6 +1,6 @@
 {
   "id": "node",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "name": "Node.js",
   "description": "Node.js (LTS by default) via mise, with a configurable package manager (pnpm by default; npm or yarn supported). Package managers other than npm are activated through corepack.",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/node",

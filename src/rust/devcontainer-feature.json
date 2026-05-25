@@ -1,6 +1,6 @@
 {
   "id": "rust",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "name": "Rust",
   "description": "Rust toolchain via rustup, with RUSTUP_HOME / CARGO_HOME pinned system-wide so the toolchain is shared across container users.",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/rust",

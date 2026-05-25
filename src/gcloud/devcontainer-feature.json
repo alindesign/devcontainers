@@ -1,8 +1,8 @@
 {
   "id": "gcloud",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "name": "Google Cloud CLI",
-  "description": "Installs gcloud CLI via Google's official apt repository. Optionally mounts ~/.config/gcloud from the host so existing logins / projects are reused.",
+  "description": "Installs gcloud CLI via Google's official apt repository. Mount ~/.config/gcloud from the host in your devcontainer.json to reuse host logins (see README).",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/gcloud",
   "options": {
     "installComponents": {

@@ -1,6 +1,6 @@
 {
   "id": "claude",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "name": "Claude Code CLI",
   "description": "Installs Anthropic's Claude Code CLI (@anthropic-ai/claude-code) globally via npm. Requires a Node.js install on the container — works out of the box with `ghcr.io/alindesign/features/node` or `ghcr.io/devcontainers/features/node`.",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/claude",

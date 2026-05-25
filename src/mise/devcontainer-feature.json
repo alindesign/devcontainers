@@ -1,6 +1,6 @@
 {
   "id": "mise",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "name": "mise",
   "description": "Installs mise (https://mise.jdx.dev) system-wide as the toolchain version manager. Other features in this repo (node, go, rust, java) layer on top of this.",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/mise",

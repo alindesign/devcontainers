@@ -1,6 +1,6 @@
 {
   "id": "ocaml",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "name": "OCaml",
   "description": "OCaml via opam (mise has no first-class OCaml plugin). Installs opam, initializes an opam root at /usr/local/share/opam, and creates a switch with the requested compiler version.",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/ocaml",
