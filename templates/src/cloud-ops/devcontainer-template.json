@@ -1,6 +1,6 @@
 {
   "id": "cloud-ops",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "Cloud Ops (alindesign)",
   "description": "Ubuntu + alindesign dotfiles + AWS CLI v2 + gcloud CLI, with host `~/.aws` and `~/.config/gcloud` mounted so the container reuses your host credentials and project settings.",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/cloud-ops",

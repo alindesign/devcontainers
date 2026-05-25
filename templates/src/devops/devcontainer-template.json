@@ -1,6 +1,6 @@
 {
   "id": "devops",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "DevOps (alindesign)",
   "description": "Ubuntu + alindesign dotfiles + Python (uv) + Ansible + AWS CLI + gcloud + kubectl + helm + OpenTofu + secrets tooling. The full IaC / DevOps toolbox.",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/devops",

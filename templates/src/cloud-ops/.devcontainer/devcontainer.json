@@ -1,11 +1,7 @@
 {
   "name": "Cloud Ops (alindesign)",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "image": "ghcr.io/alindesign/devcontainer-base:latest",
   "features": {
-    "ghcr.io/alindesign/features/dotfiles:1": {
-      "gitUserName": "${templateOption:gitUserName}",
-      "gitUserEmail": "${templateOption:gitUserEmail}"
-    },
     "ghcr.io/alindesign/features/aws-cli:1": {},
     "ghcr.io/alindesign/features/gcloud:1": {
       "installComponents": "${templateOption:gcloudComponents}"
@@ -16,7 +12,7 @@
     { "source": "${localEnv:HOME}/.aws", "target": "/home/vscode/.aws", "type": "bind" },
     { "source": "${localEnv:HOME}/.config/gcloud", "target": "/home/vscode/.config/gcloud", "type": "bind" }
   ],
-  "postCreateCommand": "aws --version && gcloud --version | head -n1",
+  "postCreateCommand": "bash -c 'gn=\"${templateOption:gitUserName}\"; ge=\"${templateOption:gitUserEmail}\"; [ -n \"$gn\" ] && git config --global user.name \"$gn\"; [ -n \"$ge\" ] && git config --global user.email \"$ge\"; aws --version && gcloud --version | head -n1'",
   "customizations": {
     "vscode": {
       "extensions": [

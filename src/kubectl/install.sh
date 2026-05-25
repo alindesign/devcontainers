@@ -23,8 +23,8 @@ rm -rf /var/lib/apt/lists/*
 
 arch="$(uname -m)"
 case "${arch}" in
-  x86_64|amd64) GO_ARCH=amd64 ;;
-  aarch64|arm64) GO_ARCH=arm64 ;;
+  x86_64|amd64)  GO_ARCH=amd64; KUBECTX_ARCH=x86_64 ;;
+  aarch64|arm64) GO_ARCH=arm64; KUBECTX_ARCH=arm64  ;;
   *) echo "kubectl feature: unsupported arch ${arch}" >&2; exit 1 ;;
 esac
 
@@ -76,11 +76,12 @@ if [ "${INSTALL_K9S}" = "true" ]; then
 fi
 
 # --- kubectx + kubens ------------------------------------------------------
+# kubectx uses `x86_64` / `arm64` in its asset names, NOT `amd64`. Bite us once.
 if [ "${INSTALL_KUBECTX}" = "true" ]; then
   KUBECTX_VERSION="v0.9.5"
   base="https://github.com/ahmetb/kubectx/releases/download/${KUBECTX_VERSION}"
   for tool in kubectx kubens; do
-    curl -fsSL "${base}/${tool}_${KUBECTX_VERSION}_linux_${GO_ARCH}.tar.gz" \
+    curl -fsSL "${base}/${tool}_${KUBECTX_VERSION}_linux_${KUBECTX_ARCH}.tar.gz" \
       | tar -xz -C "${TMP}" "${tool}"
     install -m 0755 "${TMP}/${tool}" "/usr/local/bin/${tool}"
   done

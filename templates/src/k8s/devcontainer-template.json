@@ -1,6 +1,6 @@
 {
   "id": "k8s",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "Kubernetes (alindesign)",
   "description": "Ubuntu + alindesign dotfiles + Go + kubectl + helm + k9s + Docker-in-Docker. For controller/operator dev and local cluster work (kind, k3d, minikube).",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/k8s",

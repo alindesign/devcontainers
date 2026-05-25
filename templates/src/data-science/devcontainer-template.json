@@ -1,6 +1,6 @@
 {
   "id": "data-science",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "Data Science (alindesign)",
   "description": "Ubuntu + alindesign dotfiles + Python (uv) + JupyterLab + DuckDB + db-tooling. Quick-start for ML notebooks and ad-hoc data work.",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/data-science",

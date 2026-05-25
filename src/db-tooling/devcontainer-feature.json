@@ -1,6 +1,6 @@
 {
   "id": "db-tooling",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "name": "Database CLI tooling",
   "description": "psql + mysql + redis-cli + mongosh. Each can be skipped via the skipX options. Connects to external databases — no servers are installed.",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/db-tooling",

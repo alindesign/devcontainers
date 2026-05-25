@@ -17,7 +17,7 @@ on:
       run-all:
         description: "Run the full matrix regardless of which paths changed"
         type: boolean
-        default: true
+        default: false
 
 jobs:
   # Detect which features need testing this run. Only the ones with changes
@@ -62,11 +62,14 @@ jobs:
           all_features=$(ls src | sort -u | jq -R . | jq -sc .)
           echo "all features: $all_features"
 
-          run_all="${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run-all) }}"
+          # Granular tests always — including on push to main. Full matrix
+          # only when explicitly requested via `workflow_dispatch` with
+          # run-all=true. Workflow / global test changes (below) still force
+          # a full run because they affect every feature.
+          run_all="${{ github.event_name == 'workflow_dispatch' && inputs.run-all }}"
 
-          # Workflow + test-lib changes affect everything, so always full matrix.
           if [ "$run_all" = "true" ]; then
-            reason="full matrix (push to main or workflow_dispatch run-all)"
+            reason="full matrix (workflow_dispatch run-all=true)"
             selected="$all_features"
           else
             base="${{ steps.range.outputs.base }}"

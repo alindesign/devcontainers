@@ -1,6 +1,6 @@
 {
   "id": "opentofu",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "name": "OpenTofu",
   "description": "Installs the OpenTofu binary (open-source Terraform fork) from the official release, optionally with tflint.",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/opentofu",

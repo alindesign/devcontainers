@@ -37,13 +37,22 @@ if [ "${SKIP_MONGOSH}" != "true" ]; then
     | gpg --batch --yes --dearmor -o /etc/apt/keyrings/mongodb-server-7.0.gpg
   chmod 0644 /etc/apt/keyrings/mongodb-server-7.0.gpg
 
-  # mongosh repo paths use ubuntu codenames; for Debian map to closest.
-  codename="${VERSION_CODENAME}"
+  # mongosh apt repo only ships a fixed set of Ubuntu codenames and lags
+  # behind interim releases (e.g. 25.04 'plucky', 25.10 'resolute' are absent).
+  # Map every unknown distro to the latest LTS the repo supports.
+  MONGO_SUPPORTED="noble jammy focal"
+  codename="${VERSION_CODENAME:-noble}"
+  if ! echo "${MONGO_SUPPORTED}" | grep -qw "${codename}"; then
+    echo "db-tooling feature: '${codename}' has no MongoDB apt channel; falling back to noble"
+    codename="noble"
+  fi
   case "${ID}" in
     debian)
+      # MongoDB doesn't publish Debian repos for newer codenames cleanly;
+      # use a recent Ubuntu LTS.
       case "${VERSION_CODENAME}" in
-        bookworm) codename="jammy" ;;
-        bullseye) codename="focal" ;;
+        bookworm|trixie) codename="jammy" ;;
+        bullseye)        codename="focal" ;;
       esac
       ;;
   esac
@@ -58,10 +67,10 @@ fi
 apt-get clean
 rm -rf /var/lib/apt/lists/*
 
-# --- sanity ----------------------------------------------------------------
-[ "${SKIP_POSTGRES}" = "true" ] || psql --version | head -n1
-[ "${SKIP_MYSQL}"    = "true" ] || mysql --version | head -n1
-[ "${SKIP_REDIS}"    = "true" ] || redis-cli --version | head -n1
-[ "${SKIP_MONGOSH}"  = "true" ] || mongosh --version | head -n1
+# --- sanity (head + pipefail can trip SIGPIPE; guard each print) -----------
+[ "${SKIP_POSTGRES}" = "true" ] || psql --version 2>&1 | head -n1 || true
+[ "${SKIP_MYSQL}"    = "true" ] || mysql --version 2>&1 | head -n1 || true
+[ "${SKIP_REDIS}"    = "true" ] || redis-cli --version 2>&1 | head -n1 || true
+[ "${SKIP_MONGOSH}"  = "true" ] || mongosh --version 2>&1 | head -n1 || true
 
 echo "db-tooling feature: done"

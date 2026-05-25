@@ -1,11 +1,7 @@
 {
   "name": "Claude Dev (alindesign)",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "image": "ghcr.io/alindesign/devcontainer-base:latest",
   "features": {
-    "ghcr.io/alindesign/features/dotfiles:1": {
-      "gitUserName": "${templateOption:gitUserName}",
-      "gitUserEmail": "${templateOption:gitUserEmail}"
-    },
     "ghcr.io/alindesign/features/node:2": {
       "version": "${templateOption:nodeVersion}",
       "packageManager": "${templateOption:packageManager}"
@@ -18,7 +14,7 @@
     { "source": "${localEnv:HOME}/.claude", "target": "/home/vscode/.claude", "type": "bind" },
     { "source": "${localEnv:HOME}/.claude.json", "target": "/home/vscode/.claude.json", "type": "bind" }
   ],
-  "postCreateCommand": "claude --version && node --version",
+  "postCreateCommand": "bash -c 'gn=\"${templateOption:gitUserName}\"; ge=\"${templateOption:gitUserEmail}\"; [ -n \"$gn\" ] && git config --global user.name \"$gn\"; [ -n \"$ge\" ] && git config --global user.email \"$ge\"; claude --version && node --version'",
   "customizations": {
     "vscode": {
       "extensions": [

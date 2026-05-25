@@ -46,7 +46,9 @@ unzip -q "${TMP}/tofu.zip" -d "${TMP}"
 install -m 0755 "${TMP}/tofu" /usr/local/bin/tofu
 # Convenience alias so muscle memory works.
 ln -sf /usr/local/bin/tofu /usr/local/bin/terraform
-tofu version | head -n1
+# Pipefail + multi-line output makes `... | head -n1` race on SIGPIPE.
+# Guard each smoke print so a 141 exit doesn't fail the build.
+tofu version 2>&1 | head -n1 || true
 echo "opentofu feature: tofu ${TFV} installed (terraform alias at /usr/local/bin/terraform)"
 
 if [ "${INSTALL_TFLINT}" = "true" ]; then
@@ -54,7 +56,7 @@ if [ "${INSTALL_TFLINT}" = "true" ]; then
   curl -fsSL "https://github.com/terraform-linters/tflint/releases/download/${TFLINT_VERSION}/tflint_linux_${GO_ARCH}.zip" -o "${TMP}/tflint.zip"
   unzip -q -o "${TMP}/tflint.zip" -d "${TMP}"
   install -m 0755 "${TMP}/tflint" /usr/local/bin/tflint
-  tflint --version | head -n1
+  tflint --version 2>&1 | head -n1 || true
 fi
 
 echo "opentofu feature: done"

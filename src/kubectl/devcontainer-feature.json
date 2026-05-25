@@ -1,6 +1,6 @@
 {
   "id": "kubectl",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "name": "Kubernetes CLI tooling",
   "description": "kubectl + helm + k9s + kubectx/kubens. Optional skipX flags for each. Mount your kubeconfig from the host in your devcontainer.json (see README).",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/kubectl",

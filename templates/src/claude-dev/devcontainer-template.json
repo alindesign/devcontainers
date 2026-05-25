@@ -1,6 +1,6 @@
 {
   "id": "claude-dev",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "Claude Dev (alindesign)",
   "description": "Ubuntu + alindesign dotfiles + Node.js (mise) + Claude Code CLI, with host `~/.claude` and `~/.claude.json` mounted so the container reuses your host login, history, and settings.",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/claude-dev",

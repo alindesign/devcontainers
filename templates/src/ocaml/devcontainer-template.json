@@ -1,6 +1,6 @@
 {
   "id": "ocaml",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "OCaml (alindesign)",
   "description": "Ubuntu base + alindesign dotfiles (zsh, starship, CLI tools) + OCaml via opam, with dune + ocaml-lsp-server + ocamlformat.",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/ocaml",

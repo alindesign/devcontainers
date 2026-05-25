@@ -1,6 +1,6 @@
 {
   "id": "rust",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "Rust (alindesign)",
   "description": "Ubuntu base + alindesign dotfiles (zsh, starship, CLI tools) + Rust via mise (rustup) with clippy/rustfmt/rust-analyzer.",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/rust",

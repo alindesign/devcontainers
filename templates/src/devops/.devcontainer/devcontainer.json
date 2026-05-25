@@ -1,11 +1,7 @@
 {
   "name": "DevOps (alindesign)",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "image": "ghcr.io/alindesign/devcontainer-base:latest",
   "features": {
-    "ghcr.io/alindesign/features/dotfiles:1": {
-      "gitUserName": "${templateOption:gitUserName}",
-      "gitUserEmail": "${templateOption:gitUserEmail}"
-    },
     "ghcr.io/alindesign/features/python:1": {
       "version": "${templateOption:pythonVersion}",
       "packageManager": "uv"
@@ -29,7 +25,7 @@
     { "source": "${localEnv:HOME}/.config/gcloud", "target": "/home/vscode/.config/gcloud", "type": "bind" },
     { "source": "${localEnv:HOME}/.kube", "target": "/home/vscode/.kube", "type": "bind" }
   ],
-  "postCreateCommand": "ansible --version | head -n1 && kubectl version --client=true | head -n1 && tofu version | head -n1",
+  "postCreateCommand": "bash -c 'gn=\"${templateOption:gitUserName}\"; ge=\"${templateOption:gitUserEmail}\"; [ -n \"$gn\" ] && git config --global user.name \"$gn\"; [ -n \"$ge\" ] && git config --global user.email \"$ge\"; ansible --version | head -n1 && kubectl version --client=true | head -n1 && tofu version | head -n1'",
   "customizations": {
     "vscode": {
       "extensions": [

@@ -1,18 +1,14 @@
 {
   "name": "Rust (alindesign)",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "image": "ghcr.io/alindesign/devcontainer-base:latest",
   "features": {
-    "ghcr.io/alindesign/features/dotfiles:1": {
-      "gitUserName": "${templateOption:gitUserName}",
-      "gitUserEmail": "${templateOption:gitUserEmail}"
-    },
     "ghcr.io/alindesign/features/rust:1": {
       "version": "${templateOption:rustVersion}",
       "targets": "${templateOption:targets}"
     }
   },
   "remoteUser": "vscode",
-  "postCreateCommand": "rustc --version && cargo --version",
+  "postCreateCommand": "bash -c 'gn=\"${templateOption:gitUserName}\"; ge=\"${templateOption:gitUserEmail}\"; [ -n \"$gn\" ] && git config --global user.name \"$gn\"; [ -n \"$ge\" ] && git config --global user.email \"$ge\"; rustc --version && cargo --version'",
   "customizations": {
     "vscode": {
       "extensions": [

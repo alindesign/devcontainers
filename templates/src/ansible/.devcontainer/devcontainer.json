@@ -1,11 +1,7 @@
 {
   "name": "Ansible (alindesign)",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "image": "ghcr.io/alindesign/devcontainer-base:latest",
   "features": {
-    "ghcr.io/alindesign/features/dotfiles:1": {
-      "gitUserName": "${templateOption:gitUserName}",
-      "gitUserEmail": "${templateOption:gitUserEmail}"
-    },
     "ghcr.io/alindesign/features/python:1": {
       "version": "${templateOption:pythonVersion}",
       "packageManager": "uv"
@@ -17,7 +13,7 @@
     }
   },
   "remoteUser": "vscode",
-  "postCreateCommand": "ansible --version | head -n1 && ansible-lint --version 2>&1 | head -n1",
+  "postCreateCommand": "bash -c 'gn=\"${templateOption:gitUserName}\"; ge=\"${templateOption:gitUserEmail}\"; [ -n \"$gn\" ] && git config --global user.name \"$gn\"; [ -n \"$ge\" ] && git config --global user.email \"$ge\"; ansible --version | head -n1 && ansible-lint --version 2>&1 | head -n1'",
   "customizations": {
     "vscode": {
       "extensions": [

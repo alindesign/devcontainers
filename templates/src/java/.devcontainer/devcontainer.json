@@ -1,11 +1,7 @@
 {
   "name": "Java (alindesign)",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "image": "ghcr.io/alindesign/devcontainer-base:latest",
   "features": {
-    "ghcr.io/alindesign/features/dotfiles:1": {
-      "gitUserName": "${templateOption:gitUserName}",
-      "gitUserEmail": "${templateOption:gitUserEmail}"
-    },
     "ghcr.io/alindesign/features/java:1": {
       "version": "${templateOption:javaVersion}",
       "installMaven": "${templateOption:installMaven}",
@@ -13,7 +9,7 @@
     }
   },
   "remoteUser": "vscode",
-  "postCreateCommand": "java --version",
+  "postCreateCommand": "bash -c 'gn=\"${templateOption:gitUserName}\"; ge=\"${templateOption:gitUserEmail}\"; [ -n \"$gn\" ] && git config --global user.name \"$gn\"; [ -n \"$ge\" ] && git config --global user.email \"$ge\"; java --version'",
   "customizations": {
     "vscode": {
       "extensions": [

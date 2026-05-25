@@ -1,11 +1,7 @@
 {
   "name": "Data Science (alindesign)",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "image": "ghcr.io/alindesign/devcontainer-base:latest",
   "features": {
-    "ghcr.io/alindesign/features/dotfiles:1": {
-      "gitUserName": "${templateOption:gitUserName}",
-      "gitUserEmail": "${templateOption:gitUserEmail}"
-    },
     "ghcr.io/alindesign/features/python:1": {
       "version": "${templateOption:pythonVersion}",
       "packageManager": "uv"
@@ -15,7 +11,7 @@
     }
   },
   "remoteUser": "vscode",
-  "postCreateCommand": "uv tool install --force jupyterlab && uv tool install --force duckdb && jupyter --version | head -n1 && duckdb --version",
+  "postCreateCommand": "bash -c 'gn=\"${templateOption:gitUserName}\"; ge=\"${templateOption:gitUserEmail}\"; [ -n \"$gn\" ] && git config --global user.name \"$gn\"; [ -n \"$ge\" ] && git config --global user.email \"$ge\"; uv tool install --force jupyterlab && uv tool install --force duckdb && jupyter --version | head -n1 && duckdb --version'",
   "forwardPorts": [8888],
   "customizations": {
     "vscode": {

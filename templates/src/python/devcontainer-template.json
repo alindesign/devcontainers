@@ -1,6 +1,6 @@
 {
   "id": "python",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "Python (alindesign)",
   "description": "Ubuntu + alindesign dotfiles + Python via mise + uv (default) / poetry / none.",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/python",

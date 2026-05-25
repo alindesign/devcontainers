@@ -1,6 +1,6 @@
 {
   "id": "ansible",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "Ansible (alindesign)",
   "description": "Ubuntu + alindesign dotfiles + Python (uv) + Ansible + ansible-lint, ready for playbook authoring and IaC work.",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/ansible",
