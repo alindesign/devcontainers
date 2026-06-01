@@ -11,6 +11,7 @@ zsh + starship + modern CLI tools + neovim + sensible git defaults, with optiona
 | Search | `ripgrep` (`grep`), `fd-find` (`find`), `fzf` (keybindings + completion) |
 | Files | `bat` (`cat`), `zoxide` (`cd`) |
 | Git | `git-delta` (pager + interactive diff), curated `~/.gitconfig`, optional GPG/SSH signing |
+| GitHub | `gh` CLI from the official apt repo, wired as the git credential helper for `github.com` / `gist.github.com` |
 | Editor | `neovim` with a minimal `init.lua` (numbers, 2-space indent, clipboard, `<space>` leader) |
 | Misc | `jq`, `tmux`, `htop` |
 | Signing (opt-in) | `gnupg2` (if `gitSigningFormat=gpg`) — skipped for `ssh` and `none` |
@@ -27,6 +28,7 @@ Existing `~/.gitconfig` is preserved. Local overrides for zsh go in `~/.zshrc.lo
 | `gitSigningFormat` | string | `gpg` | `gpg`, `ssh`, or `none`. `gpg` installs gnupg + sets pinentry to loopback. `ssh` configures git for SSH signing and skips gnupg. |
 | `gitSigningKey` | string | `""` | GPG key ID/fingerprint, or absolute path to a public SSH key inside the container. Empty leaves signing off even when format is set. |
 | `installNvim` | boolean | `true` | install neovim + minimal config |
+| `installGhCli` | boolean | `true` | install `gh` from `cli.github.com/packages` and set it as the git credential helper for github.com + gist.github.com |
 
 ## Use
 
@@ -91,6 +93,12 @@ Set `gitSigningFormat: ssh` and `gitSigningKey` to the absolute container path o
 ### Option C — no signing
 
 `gitSigningFormat: none` (or leaving `gitSigningKey` empty) skips signing setup entirely.
+
+## GitHub CLI
+
+`gh` is installed from `https://cli.github.com/packages` and registered as the git credential helper for `github.com` and `gist.github.com`. Auth is not done automatically — run `gh auth login` once inside the container (or mount the host's `~/.config/gh` to reuse an existing token). Once authed, `git push` / `git clone` against GitHub will pick up credentials from `gh` with no extra config.
+
+Set `installGhCli: false` to skip the install and leave the credential helper unconfigured.
 
 ## Notes
 

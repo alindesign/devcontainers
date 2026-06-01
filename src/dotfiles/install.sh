@@ -10,6 +10,7 @@ GIT_USER_EMAIL="${GITUSEREMAIL:-}"
 GIT_SIGNING_FORMAT="${GITSIGNINGFORMAT:-gpg}"
 GIT_SIGNING_KEY="${GITSIGNINGKEY:-}"
 INSTALL_NVIM="${INSTALLNVIM:-true}"
+INSTALL_GH_CLI="${INSTALLGHCLI:-true}"
 
 case "${GIT_SIGNING_FORMAT}" in
   gpg|ssh|none) ;;
@@ -59,6 +60,19 @@ esac
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -y
 
+# Bootstrap deps needed to register the GitHub CLI apt repo before the main
+# install pass below. Kept narrow to avoid pulling more than necessary up front.
+if [ "${INSTALL_GH_CLI}" = "true" ]; then
+  apt-get install -y --no-install-recommends curl ca-certificates gnupg
+  install -d -m 0755 /etc/apt/keyrings
+  GH_KEYRING=/etc/apt/keyrings/githubcli-archive-keyring.gpg
+  curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg -o "${GH_KEYRING}"
+  chmod go+r "${GH_KEYRING}"
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=${GH_KEYRING}] https://cli.github.com/packages stable main" \
+    > /etc/apt/sources.list.d/github-cli.list
+  apt-get update -y
+fi
+
 APT_PKGS=(
   zsh
   git
@@ -86,6 +100,9 @@ if [ "${INSTALL_NVIM}" = "true" ]; then
 fi
 if [ "${GIT_SIGNING_FORMAT}" = "gpg" ]; then
   APT_PKGS+=(gnupg2)
+fi
+if [ "${INSTALL_GH_CLI}" = "true" ]; then
+  APT_PKGS+=(gh)
 fi
 
 apt-get install -y --no-install-recommends "${APT_PKGS[@]}"
@@ -264,8 +281,19 @@ if [ ! -f "${GITCONFIG}" ]; then
     echo "  navigate = true"
     echo "  side-by-side = true"
     echo "  line-numbers = true"
+    if [ "${INSTALL_GH_CLI}" = "true" ]; then
+      echo "[credential \"https://github.com\"]"
+      echo "  helper = !gh auth git-credential"
+      echo "[credential \"https://gist.github.com\"]"
+      echo "  helper = !gh auth git-credential"
+    fi
   } > "${GITCONFIG}"
   chown "${USERNAME}:$(id -gn "${USERNAME}")" "${GITCONFIG}" 2>/dev/null || true
+elif [ "${INSTALL_GH_CLI}" = "true" ]; then
+  # User-provided gitconfig already exists. Set the gh credential helpers
+  # idempotently without clobbering anything else.
+  sudo -u "${USERNAME}" git config --global credential.https://github.com.helper '!gh auth git-credential'
+  sudo -u "${USERNAME}" git config --global credential.https://gist.github.com.helper '!gh auth git-credential'
 fi
 if [ -n "${GIT_USER_NAME}" ]; then
   sudo -u "${USERNAME}" git config --global user.name "${GIT_USER_NAME}"

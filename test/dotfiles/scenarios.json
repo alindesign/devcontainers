@@ -17,5 +17,14 @@
         "installNvim": false
       }
     }
+  },
+  "no-gh": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "remoteUser": "vscode",
+    "features": {
+      "dotfiles": {
+        "installGhCli": false
+      }
+    }
   }
 }

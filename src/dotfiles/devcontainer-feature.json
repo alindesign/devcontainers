@@ -1,8 +1,8 @@
 {
   "id": "dotfiles",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "name": "alindesign dotfiles",
-  "description": "zsh + starship + CLI tools (fd, rg, bat, fzf, jq, delta, eza, zoxide) + nvim + git config, with optional GPG/SSH commit signing.",
+  "description": "zsh + starship + CLI tools (fd, rg, bat, fzf, jq, delta, eza, zoxide, gh) + nvim + git config, with optional GPG/SSH commit signing.",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/dotfiles",
   "options": {
     "setDefaultShell": {
@@ -35,6 +35,11 @@
       "type": "boolean",
       "default": true,
       "description": "Install neovim with a minimal config"
+    },
+    "installGhCli": {
+      "type": "boolean",
+      "default": true,
+      "description": "Install GitHub CLI (gh) from the official apt repo and wire it as the git credential helper for github.com / gist.github.com"
     }
   },
   "installsAfter": [

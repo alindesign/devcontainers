@@ -19,5 +19,8 @@ check "starship config written" test -f /home/vscode/.config/starship.toml
 check "nvim init written" test -f /home/vscode/.config/nvim/init.lua
 check "git delta configured" sh -c 'git config --global --get core.pager | grep -q delta'
 check "vscode default shell zsh" sh -c 'getent passwd vscode | cut -d: -f7 | grep -q zsh'
+check "gh present" command -v gh
+check "gh credential helper for github.com" sh -c 'git config --global --get credential.https://github.com.helper | grep -q "gh auth git-credential"'
+check "gh credential helper for gist.github.com" sh -c 'git config --global --get credential.https://gist.github.com.helper | grep -q "gh auth git-credential"'
 
 reportResults
