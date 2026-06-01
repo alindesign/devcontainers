@@ -44,5 +44,14 @@
         "installTmuxConfig": false
       }
     }
+  },
+  "atuin-sync-address": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "remoteUser": "vscode",
+    "features": {
+      "dotfiles": {
+        "atuinSyncAddress": "https://atuin.example.com"
+      }
+    }
   }
 }

@@ -1,0 +1,20 @@
+add_newline = true
+command_timeout = 1000
+
+[character]
+success_symbol = "[>](bold green)"
+error_symbol = "[x](bold red)"
+
+[directory]
+truncation_length = 4
+truncate_to_repo = true
+
+[git_branch]
+symbol = " "
+
+[nodejs]
+format = "[$symbol($version )]($style)"
+symbol = "node "
+
+[package]
+disabled = true

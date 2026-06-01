@@ -1,8 +1,8 @@
 {
   "id": "dotfiles",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "name": "alindesign dotfiles",
-  "description": "zsh + starship + CLI tools (fd, rg, bat, fzf, jq, delta, eza, zoxide, gh, atuin) + tmux config + extended nvim init + git config, with optional GPG/SSH commit signing.",
+  "description": "zsh + starship + CLI tools (fd, rg, bat, fzf, jq, delta, eza, zoxide, gh, atuin) + tmux (TPM + catppuccin pre-installed) + neovim (recent build + alindesign LazyVim config) + git config, with optional GPG/SSH commit signing. Configs are sourced from alindesign/dotfiles.",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/dotfiles",
   "options": {
     "setDefaultShell": {
@@ -34,7 +34,7 @@
     "installNvim": {
       "type": "boolean",
       "default": true,
-      "description": "Install neovim with a minimal config"
+      "description": "Install neovim (recent build from upstream tarball, since apt's nvim is too old for LazyVim) + alindesign LazyVim config + treesitter build deps (gcc, make). Set false to skip nvim entirely."
     },
     "installGhCli": {
       "type": "boolean",
@@ -45,6 +45,11 @@
       "type": "boolean",
       "default": true,
       "description": "Install atuin (encrypted, syncable shell history with fuzzy-search UI on Ctrl-R). Up-arrow keeps native zsh history."
+    },
+    "atuinSyncAddress": {
+      "type": "string",
+      "default": "",
+      "description": "Atuin sync server URL (sets `sync_address` in ~/.config/atuin/config.toml). Empty leaves the default (api.atuin.sh). Self-hosters: pass your server URL here so `atuin login` targets the right backend."
     },
     "installTmuxConfig": {
       "type": "boolean",

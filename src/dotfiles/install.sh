@@ -12,6 +12,7 @@ GIT_SIGNING_KEY="${GITSIGNINGKEY:-}"
 INSTALL_NVIM="${INSTALLNVIM:-true}"
 INSTALL_GH_CLI="${INSTALLGHCLI:-true}"
 INSTALL_ATUIN="${INSTALLATUIN:-true}"
+ATUIN_SYNC_ADDRESS="${ATUINSYNCADDRESS:-}"
 INSTALL_TMUX_CONFIG="${INSTALLTMUXCONFIG:-true}"
 
 case "${GIT_SIGNING_FORMAT}" in
@@ -26,6 +27,12 @@ if [ "$(id -u)" -ne 0 ]; then
   echo "dotfiles feature: must run as root" >&2
   exit 1
 fi
+
+# Feature directory — devcontainer features are copied to a temp dir before
+# install.sh runs, so resolving relative to BASH_SOURCE is the canonical way
+# to locate sibling files (config/*).
+FEATURE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFIG_DIR="${FEATURE_DIR}/config"
 
 # --- resolve remote user ----------------------------------------------------
 detect_user() {
@@ -48,6 +55,7 @@ if [ "${USERNAME}" = "root" ]; then
 else
   USER_HOME="$(getent passwd "${USERNAME}" | cut -d: -f6)"
 fi
+USER_GROUP="$(id -gn "${USERNAME}")"
 echo "dotfiles feature: target user=${USERNAME} home=${USER_HOME}"
 
 # --- arch -------------------------------------------------------------------
@@ -98,7 +106,9 @@ APT_PKGS=(
   python3-pip
 )
 if [ "${INSTALL_NVIM}" = "true" ]; then
-  APT_PKGS+=(neovim)
+  # LazyVim's nvim-treesitter compiles parsers on first run — needs a C
+  # toolchain. Recent neovim comes from upstream tarball below, not apt.
+  APT_PKGS+=(gcc make)
 fi
 if [ "${GIT_SIGNING_FORMAT}" = "gpg" ]; then
   APT_PKGS+=(gnupg2)
@@ -137,6 +147,7 @@ install_starship() {
 EZA_VERSION="0.20.10"
 ZOXIDE_VERSION="0.9.6"
 ATUIN_VERSION="18.16.1"
+NEOVIM_VERSION="0.12.2"
 
 install_eza() {
   if command -v eza >/dev/null 2>&1; then return; fi
@@ -160,154 +171,94 @@ install_atuin() {
   install -m 0755 "${TMP}/${subdir}/atuin" /usr/local/bin/atuin
 }
 
+# Neovim from upstream tarball — apt's nvim on Ubuntu LTS is too old for
+# LazyVim (LazyVim requires >= 0.10; jammy ships 0.6).
+install_neovim_tarball() {
+  local nv_arch
+  case "${arch}" in
+    x86_64|amd64) nv_arch="x86_64" ;;
+    aarch64|arm64) nv_arch="arm64" ;;
+  esac
+  local subdir="nvim-linux-${nv_arch}"
+  local url="https://github.com/neovim/neovim/releases/download/v${NEOVIM_VERSION}/${subdir}.tar.gz"
+  # Drop any previously installed nvim (e.g. from a re-run with minimal)
+  rm -rf "/opt/${subdir}"
+  curl -fsSL "${url}" | tar -xz -C /opt
+  ln -sf "/opt/${subdir}/bin/nvim" /usr/local/bin/nvim
+}
+
 install_starship
 install_eza
 install_zoxide
 if [ "${INSTALL_ATUIN}" = "true" ]; then
   install_atuin
 fi
+if [ "${INSTALL_NVIM}" = "true" ]; then
+  install_neovim_tarball
+fi
 
-# --- config files (written to user home) ------------------------------------
-write_user_file() {
-  local path="$1"
-  local content="$2"
+# --- config files (copied from sibling config/ directory) -------------------
+install_user_file() {
+  local src="$1" dest="$2"
   local dir
-  dir="$(dirname "${path}")"
-  install -d -o "${USERNAME}" -g "${USERNAME}" "${dir}" 2>/dev/null \
+  dir="$(dirname "${dest}")"
+  install -d -o "${USERNAME}" -g "${USER_GROUP}" "${dir}" 2>/dev/null \
     || install -d "${dir}"
-  printf '%s' "${content}" > "${path}"
-  chown "${USERNAME}:$(id -gn "${USERNAME}")" "${path}" 2>/dev/null || true
+  install -m 0644 "${src}" "${dest}"
+  chown "${USERNAME}:${USER_GROUP}" "${dest}" 2>/dev/null || true
 }
 
-# starship config
-read -r -d '' STARSHIP_TOML <<'EOF' || true
-add_newline = true
-command_timeout = 1000
+install_user_tree() {
+  local src="$1" dest="$2"
+  install -d -o "${USERNAME}" -g "${USER_GROUP}" "${dest}" 2>/dev/null \
+    || install -d "${dest}"
+  cp -R "${src}/." "${dest}/"
+  chown -R "${USERNAME}:${USER_GROUP}" "${dest}" 2>/dev/null || true
+}
 
-[character]
-success_symbol = "[>](bold green)"
-error_symbol = "[x](bold red)"
+install_user_file "${CONFIG_DIR}/starship.toml" "${USER_HOME}/.config/starship.toml"
+install_user_file "${CONFIG_DIR}/zshrc"         "${USER_HOME}/.zshrc"
 
-[directory]
-truncation_length = 4
-truncate_to_repo = true
-
-[git_branch]
-symbol = " "
-
-[nodejs]
-format = "[$symbol($version )]($style)"
-symbol = "node "
-
-[package]
-disabled = true
-EOF
-write_user_file "${USER_HOME}/.config/starship.toml" "${STARSHIP_TOML}"
-
-# zshrc
-read -r -d '' ZSHRC <<'EOF' || true
-# Managed by alindesign/devcontainers dotfiles feature.
-# Local overrides go in ~/.zshrc.local (sourced at the end).
-
-export EDITOR="${EDITOR:-nvim}"
-export VISUAL="${VISUAL:-nvim}"
-export PAGER="${PAGER:-less}"
-export LESS="-R"
-export LANG="${LANG:-en_US.UTF-8}"
-export LC_ALL="${LC_ALL:-en_US.UTF-8}"
-
-# History
-HISTFILE="$HOME/.zsh_history"
-HISTSIZE=50000
-SAVEHIST=50000
-setopt INC_APPEND_HISTORY SHARE_HISTORY HIST_IGNORE_DUPS HIST_IGNORE_SPACE
-
-# Completion
-autoload -Uz compinit && compinit -u
-zstyle ':completion:*' menu select
-zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
-
-# Key bindings
-bindkey -e
-bindkey '^R' history-incremental-search-backward
-
-# Aliases
-alias ls='eza --group-directories-first'
-alias ll='eza -lah --group-directories-first --git'
-alias la='eza -a --group-directories-first'
-alias lt='eza --tree --level=2 --group-directories-first'
-alias cat='bat --paging=never'
-alias grep='rg'
-alias find='fd'
-alias g='git'
-alias gs='git status'
-alias gd='git diff'
-alias gl='git log --oneline --graph --decorate -20'
-alias vim='nvim'
-alias vi='nvim'
-
-# fzf
-if [ -f /usr/share/doc/fzf/examples/key-bindings.zsh ]; then
-  source /usr/share/doc/fzf/examples/key-bindings.zsh
-fi
-if [ -f /usr/share/doc/fzf/examples/completion.zsh ]; then
-  source /usr/share/doc/fzf/examples/completion.zsh
-fi
-
-# zoxide
-if command -v zoxide >/dev/null 2>&1; then
-  eval "$(zoxide init zsh)"
-  alias cd='z'
-fi
-
-# starship prompt
-if command -v starship >/dev/null 2>&1; then
-  eval "$(starship init zsh)"
-fi
-
-# mise — populated by node/go/rust/java features when installed.
-export MISE_DATA_DIR="${MISE_DATA_DIR:-/usr/local/share/mise}"
-command -v mise >/dev/null 2>&1 && eval "$(mise activate zsh)"
-
-# atuin — encrypted, syncable shell history with fuzzy Ctrl-R UI.
-# `--disable-up-arrow` keeps native zsh history on up-arrow; only Ctrl-R is replaced.
-# Run `atuin login` (or `atuin register`) once if you want cross-host sync.
-if command -v atuin >/dev/null 2>&1; then
-  eval "$(atuin init zsh --disable-up-arrow)"
-fi
-
-# Local overrides
-[ -f "$HOME/.zshrc.local" ] && source "$HOME/.zshrc.local"
-EOF
-write_user_file "${USER_HOME}/.zshrc" "${ZSHRC}"
-
-# atuin config — only written if atuin is installed and no config exists yet.
-if [ "${INSTALL_ATUIN}" = "true" ]; then
-  ATUIN_CONFIG="${USER_HOME}/.config/atuin/config.toml"
-  if [ ! -f "${ATUIN_CONFIG}" ]; then
-    read -r -d '' ATUIN_TOML <<'EOF' || true
-# Managed by alindesign/devcontainers dotfiles feature.
-# Run `atuin login` to enable cross-host sync (atuin defaults to api.atuin.sh,
-# override with `sync_address` below if you self-host).
-auto_sync = true
-sync_frequency = "5m"
-# Don't auto-execute on Enter — tab moves the selected command to the prompt
-# so you can review/edit it first.
-enter_accept = false
-style = "compact"
-inline_height = 10
-update_check = false
-
-[daemon]
-# The daemon is optional. Containers typically don't have a service manager,
-# so leave it off — atuin works fine via direct sqlite access.
-enabled = false
-EOF
-    write_user_file "${ATUIN_CONFIG}" "${ATUIN_TOML}"
+# atuin config — only written if atuin is installed and no config exists yet,
+# so user-provided customisations are preserved across container rebuilds.
+ATUIN_CONFIG="${USER_HOME}/.config/atuin/config.toml"
+if [ "${INSTALL_ATUIN}" = "true" ] && [ ! -f "${ATUIN_CONFIG}" ]; then
+  install_user_file "${CONFIG_DIR}/atuin.toml" "${ATUIN_CONFIG}"
+  if [ -n "${ATUIN_SYNC_ADDRESS}" ]; then
+    # Replace the commented sync_address line with the real one. Anchored to
+    # the start of line so we don't accidentally match commentary elsewhere.
+    sed -i -E "s|^# sync_address = .*|sync_address = \"${ATUIN_SYNC_ADDRESS}\"|" "${ATUIN_CONFIG}"
   fi
 fi
 
-# gitconfig — only write if user did not already provide one
+# tmux config — managed by the feature (overwrites). Mount your host
+# ~/.tmux.conf via devcontainer.json `mounts` if you want full custom control.
+# TPM (Tmux Plugin Manager) is bootstrapped here too so the catppuccin status
+# line works on the very first attach — no `prefix + I` ritual required.
+if [ "${INSTALL_TMUX_CONFIG}" = "true" ]; then
+  install_user_file "${CONFIG_DIR}/tmux.conf" "${USER_HOME}/.tmux.conf"
+  TPM_DIR="${USER_HOME}/.tmux/plugins/tpm"
+  install -d -o "${USERNAME}" -g "${USER_GROUP}" "$(dirname "${TPM_DIR}")"
+  if [ ! -d "${TPM_DIR}" ]; then
+    sudo -u "${USERNAME}" git clone --depth=1 --quiet \
+      https://github.com/tmux-plugins/tpm "${TPM_DIR}"
+  fi
+  # Pre-install the plugins declared in ~/.tmux.conf. install_plugins reads
+  # the config + git-clones each `@plugin`, so we don't need a tmux server.
+  sudo -u "${USERNAME}" env HOME="${USER_HOME}" \
+    bash "${TPM_DIR}/bin/install_plugins" >/dev/null 2>&1 || \
+    echo "dotfiles feature: TPM plugin pre-install failed; run prefix+I inside tmux to install manually"
+fi
+
+# nvim config — alindesign LazyVim setup, pre-baked under config/nvim-lazyvim
+# in this feature so the container has the full editor setup the moment build
+# finishes. Lazy.nvim still resolves plugins on first `:Lazy sync` (or first
+# nvim start, since the user's lazy.lua auto-bootstraps).
+if [ "${INSTALL_NVIM}" = "true" ]; then
+  install_user_tree "${CONFIG_DIR}/nvim-lazyvim" "${USER_HOME}/.config/nvim"
+fi
+
+# --- gitconfig --------------------------------------------------------------
 GITCONFIG="${USER_HOME}/.gitconfig"
 if [ ! -f "${GITCONFIG}" ]; then
   {
@@ -335,7 +286,7 @@ if [ ! -f "${GITCONFIG}" ]; then
       echo "  helper = !gh auth git-credential"
     fi
   } > "${GITCONFIG}"
-  chown "${USERNAME}:$(id -gn "${USERNAME}")" "${GITCONFIG}" 2>/dev/null || true
+  chown "${USERNAME}:${USER_GROUP}" "${GITCONFIG}" 2>/dev/null || true
 elif [ "${INSTALL_GH_CLI}" = "true" ]; then
   # User-provided gitconfig already exists. Set the gh credential helpers
   # idempotently without clobbering anything else.
@@ -354,7 +305,7 @@ ensure_line() {
   local file="$1" line="$2"
   touch "${file}"
   grep -qxF "${line}" "${file}" || echo "${line}" >> "${file}"
-  chown "${USERNAME}:$(id -gn "${USERNAME}")" "${file}" 2>/dev/null || true
+  chown "${USERNAME}:${USER_GROUP}" "${file}" 2>/dev/null || true
 }
 
 case "${GIT_SIGNING_FORMAT}" in
@@ -363,7 +314,7 @@ case "${GIT_SIGNING_FORMAT}" in
     # and export GPG_TTY in interactive shells so the agent can prompt.
     GNUPG_DIR="${USER_HOME}/.gnupg"
     install -d -m 0700 "${GNUPG_DIR}"
-    chown "${USERNAME}:$(id -gn "${USERNAME}")" "${GNUPG_DIR}"
+    chown "${USERNAME}:${USER_GROUP}" "${GNUPG_DIR}"
     GPG_CONF="${GNUPG_DIR}/gpg.conf"
     if ! grep -q '^pinentry-mode loopback' "${GPG_CONF}" 2>/dev/null; then
       echo 'pinentry-mode loopback' >> "${GPG_CONF}"
@@ -372,7 +323,7 @@ case "${GIT_SIGNING_FORMAT}" in
     if ! grep -q '^allow-loopback-pinentry' "${GPG_AGENT_CONF}" 2>/dev/null; then
       echo 'allow-loopback-pinentry' >> "${GPG_AGENT_CONF}"
     fi
-    chown -R "${USERNAME}:$(id -gn "${USERNAME}")" "${GNUPG_DIR}"
+    chown -R "${USERNAME}:${USER_GROUP}" "${GNUPG_DIR}"
     chmod 0600 "${GPG_CONF}" "${GPG_AGENT_CONF}" 2>/dev/null || true
 
     # Export GPG_TTY so `gpg --sign` from interactive shells can find the tty.
@@ -401,187 +352,6 @@ case "${GIT_SIGNING_FORMAT}" in
     : # no signing setup
     ;;
 esac
-
-# nvim config — single-file init.lua with sane defaults + keymaps. Plugin
-# managers are deliberately omitted: containers should stay light, and users
-# with strong nvim opinions are expected to mount their host config.
-if [ "${INSTALL_NVIM}" = "true" ]; then
-  read -r -d '' NVIM_INIT <<'EOF' || true
--- Managed by alindesign/devcontainers dotfiles feature.
--- Drop-ins go in ~/.config/nvim/lua/*.lua and load them yourself, or mount
--- your full host config over this directory.
-
-vim.g.mapleader = " "
-vim.g.maplocalleader = ","
-
--- Display
-vim.opt.number = true
-vim.opt.relativenumber = true
-vim.opt.signcolumn = "yes"
-vim.opt.cursorline = true
-vim.opt.termguicolors = true
-vim.opt.scrolloff = 4
-vim.opt.sidescrolloff = 8
-vim.opt.wrap = false
-vim.opt.showmode = false
-vim.opt.laststatus = 3
-vim.opt.statusline = "%f %m%r%h%w %= %y [%l:%c] %p%%"
-
--- Indent
-vim.opt.expandtab = true
-vim.opt.shiftwidth = 2
-vim.opt.tabstop = 2
-vim.opt.softtabstop = 2
-vim.opt.smartindent = true
-
--- Search
-vim.opt.ignorecase = true
-vim.opt.smartcase = true
-vim.opt.hlsearch = true
-vim.opt.incsearch = true
-
--- Files
-vim.opt.clipboard = "unnamedplus"
-vim.opt.undofile = true
-vim.opt.swapfile = false
-vim.opt.backup = false
-vim.opt.confirm = true
-vim.opt.updatetime = 250
-vim.opt.timeoutlen = 400
-
--- Splits open in intuitive direction
-vim.opt.splitbelow = true
-vim.opt.splitright = true
-
--- Mouse + completion menu
-vim.opt.mouse = "a"
-vim.opt.completeopt = { "menu", "menuone", "noselect" }
-vim.opt.pumheight = 10
-
--- Keymaps
-local map = function(mode, lhs, rhs, desc)
-  vim.keymap.set(mode, lhs, rhs, { silent = true, desc = desc })
-end
-
-map("n", "<leader>w", "<cmd>write<cr>", "Save")
-map("n", "<leader>q", "<cmd>quit<cr>", "Quit")
-map("n", "<leader>Q", "<cmd>qall!<cr>", "Force quit all")
-map("n", "<Esc>", "<cmd>nohlsearch<cr>", "Clear search highlight")
-map("n", "<C-h>", "<C-w>h", "Window left")
-map("n", "<C-j>", "<C-w>j", "Window down")
-map("n", "<C-k>", "<C-w>k", "Window up")
-map("n", "<C-l>", "<C-w>l", "Window right")
-map("n", "<leader>e", "<cmd>Explore<cr>", "File explorer")
-map("v", "<", "<gv", "Indent left, keep selection")
-map("v", ">", ">gv", "Indent right, keep selection")
-map("v", "J", ":m '>+1<cr>gv=gv", "Move line down")
-map("v", "K", ":m '<-2<cr>gv=gv", "Move line up")
-map("t", "<Esc><Esc>", "<C-\\><C-n>", "Exit terminal mode")
-
--- Highlight on yank (vim.hl in 0.11+, vim.highlight in older nvim)
-vim.api.nvim_create_autocmd("TextYankPost", {
-  callback = function()
-    local hl = vim.hl or vim.highlight
-    hl.on_yank({ timeout = 200 })
-  end,
-})
-
--- Trim trailing whitespace on save
-vim.api.nvim_create_autocmd("BufWritePre", {
-  callback = function()
-    local view = vim.fn.winsaveview()
-    vim.cmd([[silent! %s/\s\+$//e]])
-    vim.fn.winrestview(view)
-  end,
-})
-EOF
-  write_user_file "${USER_HOME}/.config/nvim/init.lua" "${NVIM_INIT}"
-fi
-
-# tmux config — managed by the feature (overwrites). Mount your host
-# ~/.tmux.conf via devcontainer.json `mounts` if you want full custom control.
-if [ "${INSTALL_TMUX_CONFIG}" = "true" ]; then
-  read -r -d '' TMUX_CONF <<'EOF' || true
-# Managed by alindesign/devcontainers dotfiles feature.
-# Local overrides go in ~/.tmux.conf.local (sourced at the end if present).
-
-# Terminal + colors
-set -g default-terminal "tmux-256color"
-set -ag terminal-overrides ",xterm-256color:RGB"
-set -ag terminal-overrides ",alacritty:RGB"
-set -ag terminal-overrides ",ghostty:RGB"
-
-# Prefix
-set -g prefix C-a
-unbind C-b
-bind-key C-a send-prefix
-
-# Sane defaults
-set -g mouse on
-set -g base-index 1
-setw -g pane-base-index 1
-set -g renumber-windows on
-setw -g automatic-rename on
-set -g set-titles on
-set -g history-limit 50000
-set -g escape-time 10
-set -g focus-events on
-set -g display-time 1500
-
-# Splits (inherit cwd)
-unbind %
-unbind '"'
-bind | split-window -h -c "#{pane_current_path}"
-bind - split-window -v -c "#{pane_current_path}"
-bind c new-window -c "#{pane_current_path}"
-
-# Pane management
-unbind x
-unbind X
-bind x kill-pane
-bind X kill-window
-bind r source-file ~/.tmux.conf \; display-message "tmux config reloaded"
-bind S set-window-option synchronize-panes \; display-message "pane sync #{?pane_synchronized,on,off}"
-
-# Pane navigation (vim-style without prefix when no app captures)
-bind h select-pane -L
-bind j select-pane -D
-bind k select-pane -U
-bind l select-pane -R
-
-# Resize (repeatable)
-bind -r H resize-pane -L 5
-bind -r J resize-pane -D 5
-bind -r K resize-pane -U 5
-bind -r L resize-pane -R 5
-
-# Clear screen + scrollback (since prefix took C-l)
-bind -n C-l send-keys C-l \; run 'sleep 0.1' \; clear-history
-
-# Copy-mode vi
-setw -g mode-keys vi
-bind-key -T copy-mode-vi Escape send -X cancel
-bind-key -T copy-mode-vi 'v' send -X begin-selection
-bind-key -T copy-mode-vi 'y' send -X copy-selection-and-cancel
-unbind -T copy-mode-vi MouseDragEnd1Pane
-
-# Status line — minimal, no external plugins. Color picks readable on most themes.
-set -g status-position bottom
-set -g status-justify left
-set -g status-interval 5
-set -g status-style "bg=default,fg=colour250"
-set -g status-left "#[fg=colour39,bold] #S #[default]"
-set -g status-left-length 30
-set -g status-right "#[fg=colour245]%H:%M  %d-%b "
-set -g status-right-length 60
-setw -g window-status-format " #I:#W "
-setw -g window-status-current-format "#[fg=black,bg=colour39,bold] #I:#W #[default]"
-
-# Local overrides
-if-shell "[ -f ~/.tmux.conf.local ]" "source ~/.tmux.conf.local"
-EOF
-  write_user_file "${USER_HOME}/.tmux.conf" "${TMUX_CONF}"
-fi
 
 # --- default shell ----------------------------------------------------------
 if [ "${SET_DEFAULT_SHELL}" = "true" ] && [ "${USERNAME}" != "root" ]; then

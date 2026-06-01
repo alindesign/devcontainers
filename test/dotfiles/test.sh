@@ -14,9 +14,14 @@ check "zoxide present" command -v zoxide
 check "git-delta present" command -v delta
 check "jq present" command -v jq
 check "neovim present" command -v nvim
+check "nvim version >= 0.10 (LazyVim requirement)" sh -c "nvim --version | head -1 | awk '{print \$2}' | sed 's/^v//' | awk -F. '{exit (\$1*100+\$2 >= 10) ? 0 : 1}'"
 check "vscode .zshrc written" test -f /home/vscode/.zshrc
 check "starship config written" test -f /home/vscode/.config/starship.toml
-check "nvim init written" test -f /home/vscode/.config/nvim/init.lua
+check "nvim init.lua written" test -f /home/vscode/.config/nvim/init.lua
+check "LazyVim lazy.lua bootstrap present" test -f /home/vscode/.config/nvim/lua/config/lazy.lua
+check "LazyVim extras manifest present" test -f /home/vscode/.config/nvim/lazyvim.json
+check "treesitter build deps (gcc) present" command -v gcc
+check "treesitter build deps (make) present" command -v make
 check "git delta configured" sh -c 'git config --global --get core.pager | grep -q delta'
 check "vscode default shell zsh" sh -c 'getent passwd vscode | cut -d: -f7 | grep -q zsh'
 check "gh present" command -v gh
@@ -28,7 +33,7 @@ check "atuin init wired into .zshrc" sh -c 'grep -q "atuin init zsh" /home/vscod
 check "tmux present" command -v tmux
 check "tmux config written" test -f /home/vscode/.tmux.conf
 check "tmux prefix set to C-a" sh -c 'grep -q "set -g prefix C-a" /home/vscode/.tmux.conf'
-check "nvim leader keymap configured" sh -c 'grep -q "mapleader" /home/vscode/.config/nvim/init.lua'
-check "nvim highlight-on-yank autocmd" sh -c 'grep -q "TextYankPost" /home/vscode/.config/nvim/init.lua'
+check "TPM cloned to ~/.tmux/plugins/tpm" test -d /home/vscode/.tmux/plugins/tpm
+check "catppuccin plugin pre-installed" test -d /home/vscode/.tmux/plugins/tmux
 
 reportResults
