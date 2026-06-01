@@ -6,7 +6,7 @@ Reusable [Dev Container Features](https://containers.dev/implementors/features/)
 
 | Feature | ID | Purpose |
 | --- | --- | --- |
-| [dotfiles](src/dotfiles) | `ghcr.io/alindesign/features/dotfiles:1` | zsh + starship + CLI tools (fd, rg, bat, fzf, jq, delta, eza, zoxide) + nvim + git config |
+| [dotfiles](src/dotfiles) | `ghcr.io/alindesign/features/dotfiles:1` | zsh + starship + CLI tools (fd, rg, bat, fzf, jq, delta, eza, zoxide, atuin) + nvim + git config |
 | [mise](src/mise) | `ghcr.io/alindesign/features/mise:1` | [mise](https://mise.jdx.dev) toolchain manager, shared install at `/usr/local/share/mise` |
 | [node](src/node) | `ghcr.io/alindesign/features/node:2` | Node.js via mise + package manager (pnpm/npm/yarn; pnpm default) |
 | [go](src/go) | `ghcr.io/alindesign/features/go:1` | Go via mise, optional `go install` tools |

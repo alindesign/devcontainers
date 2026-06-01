@@ -26,5 +26,14 @@
         "installGhCli": false
       }
     }
+  },
+  "no-atuin": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "remoteUser": "vscode",
+    "features": {
+      "dotfiles": {
+        "installAtuin": false
+      }
+    }
   }
 }

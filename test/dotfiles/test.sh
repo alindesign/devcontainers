@@ -22,5 +22,8 @@ check "vscode default shell zsh" sh -c 'getent passwd vscode | cut -d: -f7 | gre
 check "gh present" command -v gh
 check "gh credential helper for github.com" sh -c 'git config --global --get credential.https://github.com.helper | grep -q "gh auth git-credential"'
 check "gh credential helper for gist.github.com" sh -c 'git config --global --get credential.https://gist.github.com.helper | grep -q "gh auth git-credential"'
+check "atuin present" command -v atuin
+check "atuin config written" test -f /home/vscode/.config/atuin/config.toml
+check "atuin init wired into .zshrc" sh -c 'grep -q "atuin init zsh" /home/vscode/.zshrc'
 
 reportResults

@@ -11,6 +11,7 @@ GIT_SIGNING_FORMAT="${GITSIGNINGFORMAT:-gpg}"
 GIT_SIGNING_KEY="${GITSIGNINGKEY:-}"
 INSTALL_NVIM="${INSTALLNVIM:-true}"
 INSTALL_GH_CLI="${INSTALLGHCLI:-true}"
+INSTALL_ATUIN="${INSTALLATUIN:-true}"
 
 case "${GIT_SIGNING_FORMAT}" in
   gpg|ssh|none) ;;
@@ -134,6 +135,7 @@ install_starship() {
 # unauthenticated rate limits in CI runners; direct downloads avoid that.
 EZA_VERSION="0.20.10"
 ZOXIDE_VERSION="0.9.6"
+ATUIN_VERSION="18.16.1"
 
 install_eza() {
   if command -v eza >/dev/null 2>&1; then return; fi
@@ -149,9 +151,20 @@ install_zoxide() {
   install -m 0755 "${TMP}/zoxide" /usr/local/bin/zoxide
 }
 
+install_atuin() {
+  if command -v atuin >/dev/null 2>&1; then return; fi
+  local subdir="atuin-${ARCH_MUSL}"
+  local url="https://github.com/atuinsh/atuin/releases/download/v${ATUIN_VERSION}/${subdir}.tar.gz"
+  curl -fsSL "${url}" | tar -xz -C "${TMP}"
+  install -m 0755 "${TMP}/${subdir}/atuin" /usr/local/bin/atuin
+}
+
 install_starship
 install_eza
 install_zoxide
+if [ "${INSTALL_ATUIN}" = "true" ]; then
+  install_atuin
+fi
 
 # --- config files (written to user home) ------------------------------------
 write_user_file() {
@@ -255,10 +268,43 @@ fi
 export MISE_DATA_DIR="${MISE_DATA_DIR:-/usr/local/share/mise}"
 command -v mise >/dev/null 2>&1 && eval "$(mise activate zsh)"
 
+# atuin — encrypted, syncable shell history with fuzzy Ctrl-R UI.
+# `--disable-up-arrow` keeps native zsh history on up-arrow; only Ctrl-R is replaced.
+# Run `atuin login` (or `atuin register`) once if you want cross-host sync.
+if command -v atuin >/dev/null 2>&1; then
+  eval "$(atuin init zsh --disable-up-arrow)"
+fi
+
 # Local overrides
 [ -f "$HOME/.zshrc.local" ] && source "$HOME/.zshrc.local"
 EOF
 write_user_file "${USER_HOME}/.zshrc" "${ZSHRC}"
+
+# atuin config — only written if atuin is installed and no config exists yet.
+if [ "${INSTALL_ATUIN}" = "true" ]; then
+  ATUIN_CONFIG="${USER_HOME}/.config/atuin/config.toml"
+  if [ ! -f "${ATUIN_CONFIG}" ]; then
+    read -r -d '' ATUIN_TOML <<'EOF' || true
+# Managed by alindesign/devcontainers dotfiles feature.
+# Run `atuin login` to enable cross-host sync (atuin defaults to api.atuin.sh,
+# override with `sync_address` below if you self-host).
+auto_sync = true
+sync_frequency = "5m"
+# Don't auto-execute on Enter — tab moves the selected command to the prompt
+# so you can review/edit it first.
+enter_accept = false
+style = "compact"
+inline_height = 10
+update_check = false
+
+[daemon]
+# The daemon is optional. Containers typically don't have a service manager,
+# so leave it off — atuin works fine via direct sqlite access.
+enabled = false
+EOF
+    write_user_file "${ATUIN_CONFIG}" "${ATUIN_TOML}"
+  fi
+fi
 
 # gitconfig — only write if user did not already provide one
 GITCONFIG="${USER_HOME}/.gitconfig"

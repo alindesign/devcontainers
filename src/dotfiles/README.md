@@ -12,6 +12,7 @@ zsh + starship + modern CLI tools + neovim + sensible git defaults, with optiona
 | Files | `bat` (`cat`), `zoxide` (`cd`) |
 | Git | `git-delta` (pager + interactive diff), curated `~/.gitconfig`, optional GPG/SSH signing |
 | GitHub | `gh` CLI from the official apt repo, wired as the git credential helper for `github.com` / `gist.github.com` |
+| History | `atuin` — encrypted, syncable shell history with a fuzzy Ctrl-R UI (up-arrow keeps native zsh history) |
 | Editor | `neovim` with a minimal `init.lua` (numbers, 2-space indent, clipboard, `<space>` leader) |
 | Misc | `jq`, `tmux`, `htop` |
 | Signing (opt-in) | `gnupg2` (if `gitSigningFormat=gpg`) — skipped for `ssh` and `none` |
@@ -29,6 +30,7 @@ Existing `~/.gitconfig` is preserved. Local overrides for zsh go in `~/.zshrc.lo
 | `gitSigningKey` | string | `""` | GPG key ID/fingerprint, or absolute path to a public SSH key inside the container. Empty leaves signing off even when format is set. |
 | `installNvim` | boolean | `true` | install neovim + minimal config |
 | `installGhCli` | boolean | `true` | install `gh` from `cli.github.com/packages` and set it as the git credential helper for github.com + gist.github.com |
+| `installAtuin` | boolean | `true` | install `atuin` and wire `atuin init zsh --disable-up-arrow` into `~/.zshrc` (Ctrl-R only — up-arrow stays native zsh history) |
 
 ## Use
 
@@ -100,9 +102,28 @@ Set `gitSigningFormat: ssh` and `gitSigningKey` to the absolute container path o
 
 Set `installGhCli: false` to skip the install and leave the credential helper unconfigured.
 
+## Atuin (shell history)
+
+`atuin` replaces `Ctrl-R` with a fuzzy, full-text search over an SQLite-backed history shared across every shell session. Up-arrow is left alone (`--disable-up-arrow`) so muscle memory still works.
+
+A starter config is written to `~/.config/atuin/config.toml` only if you don't already have one — `enter_accept = false` (Tab moves a selected entry to the prompt instead of executing it), compact UI, daemon off. Override anything by editing the file or dropping a complete config from a chezmoi/mount.
+
+For cross-host sync, run once inside the container:
+
+```bash
+atuin register -u <username> -e <email>   # new account
+# or
+atuin login -u <username>                  # existing account
+atuin sync                                 # initial pull/push
+```
+
+Self-hosters: add `sync_address = "https://your-atuin-server"` to the config.
+
+Set `installAtuin: false` to skip the install entirely (no binary, no zshrc line).
+
 ## Notes
 
 - Requires a Debian/Ubuntu base image (apt-based).
 - Architectures: `amd64`, `arm64`.
-- `starship`, `eza`, `zoxide` are fetched as upstream binaries — apt versions are too old or absent.
+- `starship`, `eza`, `zoxide`, `atuin` are fetched as upstream binaries — apt versions are too old or absent.
 - The feature is idempotent; running it twice does not duplicate config.
