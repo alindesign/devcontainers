@@ -35,5 +35,14 @@
         "installAtuin": false
       }
     }
+  },
+  "no-tmux-config": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "remoteUser": "vscode",
+    "features": {
+      "dotfiles": {
+        "installTmuxConfig": false
+      }
+    }
   }
 }

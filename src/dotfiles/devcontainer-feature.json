@@ -1,8 +1,8 @@
 {
   "id": "dotfiles",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "name": "alindesign dotfiles",
-  "description": "zsh + starship + CLI tools (fd, rg, bat, fzf, jq, delta, eza, zoxide, gh, atuin) + nvim + git config, with optional GPG/SSH commit signing.",
+  "description": "zsh + starship + CLI tools (fd, rg, bat, fzf, jq, delta, eza, zoxide, gh, atuin) + tmux config + extended nvim init + git config, with optional GPG/SSH commit signing.",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/dotfiles",
   "options": {
     "setDefaultShell": {
@@ -45,6 +45,11 @@
       "type": "boolean",
       "default": true,
       "description": "Install atuin (encrypted, syncable shell history with fuzzy-search UI on Ctrl-R). Up-arrow keeps native zsh history."
+    },
+    "installTmuxConfig": {
+      "type": "boolean",
+      "default": true,
+      "description": "Write a sensible ~/.tmux.conf (C-a prefix, vi mode, mouse on, intuitive splits). tmux itself is always installed."
     }
   },
   "installsAfter": [

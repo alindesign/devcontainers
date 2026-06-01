@@ -25,5 +25,10 @@ check "gh credential helper for gist.github.com" sh -c 'git config --global --ge
 check "atuin present" command -v atuin
 check "atuin config written" test -f /home/vscode/.config/atuin/config.toml
 check "atuin init wired into .zshrc" sh -c 'grep -q "atuin init zsh" /home/vscode/.zshrc'
+check "tmux present" command -v tmux
+check "tmux config written" test -f /home/vscode/.tmux.conf
+check "tmux prefix set to C-a" sh -c 'grep -q "set -g prefix C-a" /home/vscode/.tmux.conf'
+check "nvim leader keymap configured" sh -c 'grep -q "mapleader" /home/vscode/.config/nvim/init.lua'
+check "nvim highlight-on-yank autocmd" sh -c 'grep -q "TextYankPost" /home/vscode/.config/nvim/init.lua'
 
 reportResults

@@ -13,8 +13,9 @@ zsh + starship + modern CLI tools + neovim + sensible git defaults, with optiona
 | Git | `git-delta` (pager + interactive diff), curated `~/.gitconfig`, optional GPG/SSH signing |
 | GitHub | `gh` CLI from the official apt repo, wired as the git credential helper for `github.com` / `gist.github.com` |
 | History | `atuin` — encrypted, syncable shell history with a fuzzy Ctrl-R UI (up-arrow keeps native zsh history) |
-| Editor | `neovim` with a minimal `init.lua` (numbers, 2-space indent, clipboard, `<space>` leader) |
-| Misc | `jq`, `tmux`, `htop` |
+| Editor | `neovim` with a single-file `init.lua` — sensible defaults, `<space>` leader, common keymaps, highlight-on-yank, trim trailing whitespace on save |
+| Multiplexer | `tmux` + curated `~/.tmux.conf` — `C-a` prefix, vi mode, mouse on, `\|`/`-` splits inherit cwd, no external plugin manager |
+| Misc | `jq`, `htop` |
 | Signing (opt-in) | `gnupg2` (if `gitSigningFormat=gpg`) — skipped for `ssh` and `none` |
 
 Existing `~/.gitconfig` is preserved. Local overrides for zsh go in `~/.zshrc.local`.
@@ -31,6 +32,7 @@ Existing `~/.gitconfig` is preserved. Local overrides for zsh go in `~/.zshrc.lo
 | `installNvim` | boolean | `true` | install neovim + minimal config |
 | `installGhCli` | boolean | `true` | install `gh` from `cli.github.com/packages` and set it as the git credential helper for github.com + gist.github.com |
 | `installAtuin` | boolean | `true` | install `atuin` and wire `atuin init zsh --disable-up-arrow` into `~/.zshrc` (Ctrl-R only — up-arrow stays native zsh history) |
+| `installTmuxConfig` | boolean | `true` | write a curated `~/.tmux.conf` (`C-a` prefix, vi mode, mouse, splits inherit cwd). tmux itself is always installed. |
 
 ## Use
 
@@ -120,6 +122,39 @@ atuin sync                                 # initial pull/push
 Self-hosters: add `sync_address = "https://your-atuin-server"` to the config.
 
 Set `installAtuin: false` to skip the install entirely (no binary, no zshrc line).
+
+## tmux
+
+`tmux` is always installed via apt. With `installTmuxConfig: true` (default) the feature writes a `~/.tmux.conf` with:
+
+- `C-a` prefix (`C-b` unbound)
+- `|` / `-` for horizontal/vertical splits, both inheriting the current pane's cwd
+- `c` opens a new window in the current pane's cwd
+- vi mode + `v`/`y` selection in copy-mode
+- mouse on, base-index 1, automatic window renaming + renumbering
+- `r` reloads the config, `S` toggles pane sync
+- pane navigation with `prefix h/j/k/l`, resize with `prefix H/J/K/L`
+- minimal status line (session name + clock) with no external plugin manager
+
+Local overrides go in `~/.tmux.conf.local` — sourced automatically if present, so you keep the curated defaults and add the few lines you actually want changed.
+
+Set `installTmuxConfig: false` to install tmux but skip writing the config (e.g. if you mount your host `~/.tmux.conf`).
+
+## neovim
+
+`installNvim: true` (default) installs `neovim` from apt and writes a single-file `~/.config/nvim/init.lua` with:
+
+- `<space>` leader, `,` localleader
+- relative line numbers, sign column always on, cursor line, true colors
+- 2-space indent, smart indent, no wrap
+- `<leader>w` save, `<leader>q` quit, `<Esc>` clears search highlight
+- `C-h/j/k/l` window navigation, splits open below/right
+- visual-mode `J`/`K` to move lines, `<`/`>` keep selection
+- highlight on yank, trim trailing whitespace on save
+- persistent undo, no swap/backup files
+- system clipboard via `unnamedplus`
+
+No plugin manager is installed — devcontainers should stay light. If you want LazyVim/lazy.nvim/etc., mount your host `~/.config/nvim` over this directory in your `devcontainer.json` `mounts`.
 
 ## Notes
 

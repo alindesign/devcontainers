@@ -12,6 +12,7 @@ GIT_SIGNING_KEY="${GITSIGNINGKEY:-}"
 INSTALL_NVIM="${INSTALLNVIM:-true}"
 INSTALL_GH_CLI="${INSTALLGHCLI:-true}"
 INSTALL_ATUIN="${INSTALLATUIN:-true}"
+INSTALL_TMUX_CONFIG="${INSTALLTMUXCONFIG:-true}"
 
 case "${GIT_SIGNING_FORMAT}" in
   gpg|ssh|none) ;;
@@ -401,24 +402,185 @@ case "${GIT_SIGNING_FORMAT}" in
     ;;
 esac
 
-# nvim minimal config
+# nvim config — single-file init.lua with sane defaults + keymaps. Plugin
+# managers are deliberately omitted: containers should stay light, and users
+# with strong nvim opinions are expected to mount their host config.
 if [ "${INSTALL_NVIM}" = "true" ]; then
   read -r -d '' NVIM_INIT <<'EOF' || true
 -- Managed by alindesign/devcontainers dotfiles feature.
+-- Drop-ins go in ~/.config/nvim/lua/*.lua and load them yourself, or mount
+-- your full host config over this directory.
+
+vim.g.mapleader = " "
+vim.g.maplocalleader = ","
+
+-- Display
 vim.opt.number = true
 vim.opt.relativenumber = true
+vim.opt.signcolumn = "yes"
+vim.opt.cursorline = true
+vim.opt.termguicolors = true
+vim.opt.scrolloff = 4
+vim.opt.sidescrolloff = 8
+vim.opt.wrap = false
+vim.opt.showmode = false
+vim.opt.laststatus = 3
+vim.opt.statusline = "%f %m%r%h%w %= %y [%l:%c] %p%%"
+
+-- Indent
 vim.opt.expandtab = true
 vim.opt.shiftwidth = 2
 vim.opt.tabstop = 2
+vim.opt.softtabstop = 2
 vim.opt.smartindent = true
-vim.opt.termguicolors = true
-vim.opt.clipboard = "unnamedplus"
+
+-- Search
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
-vim.opt.scrolloff = 4
-vim.g.mapleader = " "
+vim.opt.hlsearch = true
+vim.opt.incsearch = true
+
+-- Files
+vim.opt.clipboard = "unnamedplus"
+vim.opt.undofile = true
+vim.opt.swapfile = false
+vim.opt.backup = false
+vim.opt.confirm = true
+vim.opt.updatetime = 250
+vim.opt.timeoutlen = 400
+
+-- Splits open in intuitive direction
+vim.opt.splitbelow = true
+vim.opt.splitright = true
+
+-- Mouse + completion menu
+vim.opt.mouse = "a"
+vim.opt.completeopt = { "menu", "menuone", "noselect" }
+vim.opt.pumheight = 10
+
+-- Keymaps
+local map = function(mode, lhs, rhs, desc)
+  vim.keymap.set(mode, lhs, rhs, { silent = true, desc = desc })
+end
+
+map("n", "<leader>w", "<cmd>write<cr>", "Save")
+map("n", "<leader>q", "<cmd>quit<cr>", "Quit")
+map("n", "<leader>Q", "<cmd>qall!<cr>", "Force quit all")
+map("n", "<Esc>", "<cmd>nohlsearch<cr>", "Clear search highlight")
+map("n", "<C-h>", "<C-w>h", "Window left")
+map("n", "<C-j>", "<C-w>j", "Window down")
+map("n", "<C-k>", "<C-w>k", "Window up")
+map("n", "<C-l>", "<C-w>l", "Window right")
+map("n", "<leader>e", "<cmd>Explore<cr>", "File explorer")
+map("v", "<", "<gv", "Indent left, keep selection")
+map("v", ">", ">gv", "Indent right, keep selection")
+map("v", "J", ":m '>+1<cr>gv=gv", "Move line down")
+map("v", "K", ":m '<-2<cr>gv=gv", "Move line up")
+map("t", "<Esc><Esc>", "<C-\\><C-n>", "Exit terminal mode")
+
+-- Highlight on yank (vim.hl in 0.11+, vim.highlight in older nvim)
+vim.api.nvim_create_autocmd("TextYankPost", {
+  callback = function()
+    local hl = vim.hl or vim.highlight
+    hl.on_yank({ timeout = 200 })
+  end,
+})
+
+-- Trim trailing whitespace on save
+vim.api.nvim_create_autocmd("BufWritePre", {
+  callback = function()
+    local view = vim.fn.winsaveview()
+    vim.cmd([[silent! %s/\s\+$//e]])
+    vim.fn.winrestview(view)
+  end,
+})
 EOF
   write_user_file "${USER_HOME}/.config/nvim/init.lua" "${NVIM_INIT}"
+fi
+
+# tmux config — managed by the feature (overwrites). Mount your host
+# ~/.tmux.conf via devcontainer.json `mounts` if you want full custom control.
+if [ "${INSTALL_TMUX_CONFIG}" = "true" ]; then
+  read -r -d '' TMUX_CONF <<'EOF' || true
+# Managed by alindesign/devcontainers dotfiles feature.
+# Local overrides go in ~/.tmux.conf.local (sourced at the end if present).
+
+# Terminal + colors
+set -g default-terminal "tmux-256color"
+set -ag terminal-overrides ",xterm-256color:RGB"
+set -ag terminal-overrides ",alacritty:RGB"
+set -ag terminal-overrides ",ghostty:RGB"
+
+# Prefix
+set -g prefix C-a
+unbind C-b
+bind-key C-a send-prefix
+
+# Sane defaults
+set -g mouse on
+set -g base-index 1
+setw -g pane-base-index 1
+set -g renumber-windows on
+setw -g automatic-rename on
+set -g set-titles on
+set -g history-limit 50000
+set -g escape-time 10
+set -g focus-events on
+set -g display-time 1500
+
+# Splits (inherit cwd)
+unbind %
+unbind '"'
+bind | split-window -h -c "#{pane_current_path}"
+bind - split-window -v -c "#{pane_current_path}"
+bind c new-window -c "#{pane_current_path}"
+
+# Pane management
+unbind x
+unbind X
+bind x kill-pane
+bind X kill-window
+bind r source-file ~/.tmux.conf \; display-message "tmux config reloaded"
+bind S set-window-option synchronize-panes \; display-message "pane sync #{?pane_synchronized,on,off}"
+
+# Pane navigation (vim-style without prefix when no app captures)
+bind h select-pane -L
+bind j select-pane -D
+bind k select-pane -U
+bind l select-pane -R
+
+# Resize (repeatable)
+bind -r H resize-pane -L 5
+bind -r J resize-pane -D 5
+bind -r K resize-pane -U 5
+bind -r L resize-pane -R 5
+
+# Clear screen + scrollback (since prefix took C-l)
+bind -n C-l send-keys C-l \; run 'sleep 0.1' \; clear-history
+
+# Copy-mode vi
+setw -g mode-keys vi
+bind-key -T copy-mode-vi Escape send -X cancel
+bind-key -T copy-mode-vi 'v' send -X begin-selection
+bind-key -T copy-mode-vi 'y' send -X copy-selection-and-cancel
+unbind -T copy-mode-vi MouseDragEnd1Pane
+
+# Status line — minimal, no external plugins. Color picks readable on most themes.
+set -g status-position bottom
+set -g status-justify left
+set -g status-interval 5
+set -g status-style "bg=default,fg=colour250"
+set -g status-left "#[fg=colour39,bold] #S #[default]"
+set -g status-left-length 30
+set -g status-right "#[fg=colour245]%H:%M  %d-%b "
+set -g status-right-length 60
+setw -g window-status-format " #I:#W "
+setw -g window-status-current-format "#[fg=black,bg=colour39,bold] #I:#W #[default]"
+
+# Local overrides
+if-shell "[ -f ~/.tmux.conf.local ]" "source ~/.tmux.conf.local"
+EOF
+  write_user_file "${USER_HOME}/.tmux.conf" "${TMUX_CONF}"
 fi
 
 # --- default shell ----------------------------------------------------------
