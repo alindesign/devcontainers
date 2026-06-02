@@ -1,6 +1,6 @@
 {
   "id": "docker-in-docker",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "name": "Docker-in-Docker",
   "description": "Installs Docker Engine + buildx + compose v2 inside the container. The Docker daemon starts via /usr/local/share/docker-init.sh on container creation.",
   "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/docker-in-docker",

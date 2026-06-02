@@ -4,6 +4,9 @@ All notable changes to this repo's Dev Container Features and Templates are docu
 
 ## [Unreleased]
 
+### Fixed
+- `docker-in-docker` 1.0.1 — set up cgroup v2 nesting in `docker-init.sh` before starting `dockerd`. On cgroupv2-unified hosts (Docker Desktop, recent Linux), the outer engine places the dev container in a cgroup with domain controllers attached, and the inner `dockerd` couldn't create child cgroups in domain mode (`cannot enter cgroupv2 ... with domain controllers -- it is in threaded mode`). Now migrates root-cgroup processes into `/sys/fs/cgroup/init` and enables controllers via `subtree_control`.
+
 ## 2026-05-25
 
 ### Added — Features

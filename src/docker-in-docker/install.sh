@@ -89,6 +89,22 @@ cat > /usr/local/share/docker-init.sh <<'EOF'
 # Lazy-start dockerd at container boot. Re-entrant; idempotent.
 set -e
 
+# cgroup v2 nesting: on a unified-hierarchy host (Docker Desktop, recent Linux),
+# the outer engine places this container in a cgroup with domain controllers
+# attached. dockerd inside then can't create child cgroups in domain mode,
+# failing with: "cannot enter cgroupv2 ... with domain controllers -- it is in
+# threaded mode". Workaround: move all root-cgroup procs into a sub-cgroup
+# "init", then enable controllers via subtree_control so children can be created
+# in domain mode. No-op on cgroup v1.
+setup_cgroupv2_nesting() {
+  [ -f /sys/fs/cgroup/cgroup.controllers ] || return 0
+  [ -d /sys/fs/cgroup/init ] && return 0
+  mkdir -p /sys/fs/cgroup/init
+  xargs -rn1 < /sys/fs/cgroup/cgroup.procs > /sys/fs/cgroup/init/cgroup.procs 2>/dev/null || :
+  sed -e 's/ / +/g' -e 's/^/+/' < /sys/fs/cgroup/cgroup.controllers \
+    > /sys/fs/cgroup/cgroup.subtree_control 2>/dev/null || :
+}
+
 start_dockerd() {
   if pgrep -x dockerd >/dev/null 2>&1; then return 0; fi
   mkdir -p /var/log /var/run
@@ -101,6 +117,7 @@ start_dockerd() {
   return 1
 }
 
+setup_cgroupv2_nesting || true
 start_dockerd || true
 
 # Hand off to the requested command (or sleep forever if none — matches
