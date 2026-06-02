@@ -1,0 +1,10 @@
+# Managed by alindesign/devcontainers dotfiles feature.
+# Loads for every zsh invocation (interactive AND non-interactive),
+# unlike .zshrc which only loads for interactive shells. Put env vars
+# that tools spawning `zsh -c '...'` need to see here.
+
+# `devcontainer exec` defaults TERM to "xterm" (8 colors), which makes
+# tmux/nvim render with faded colors. Force a 256-color-capable TERM so
+# downstream tools (tmux terminal-overrides, nvim termguicolors) work.
+export TERM="xterm-256color"
+export COLORTERM="truecolor"

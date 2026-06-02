@@ -16,6 +16,8 @@ check "jq present" command -v jq
 check "neovim present" command -v nvim
 check "nvim version >= 0.10 (LazyVim requirement)" sh -c "nvim --version | head -1 | awk '{print \$2}' | sed 's/^v//' | awk -F. '{exit (\$1*100+\$2 >= 10) ? 0 : 1}'"
 check "vscode .zshrc written" test -f /home/vscode/.zshrc
+check "vscode .zshenv written" test -f /home/vscode/.zshenv
+check "TERM set in .zshenv" sh -c 'grep -q "TERM=\"xterm-256color\"" /home/vscode/.zshenv'
 check "starship config written" test -f /home/vscode/.config/starship.toml
 check "nvim init.lua written" test -f /home/vscode/.config/nvim/init.lua
 check "LazyVim lazy.lua bootstrap present" test -f /home/vscode/.config/nvim/lua/config/lazy.lua

@@ -217,6 +217,7 @@ install_user_tree() {
 }
 
 install_user_file "${CONFIG_DIR}/starship.toml" "${USER_HOME}/.config/starship.toml"
+install_user_file "${CONFIG_DIR}/zshenv"        "${USER_HOME}/.zshenv"
 install_user_file "${CONFIG_DIR}/zshrc"         "${USER_HOME}/.zshrc"
 
 # atuin config — only written if atuin is installed and no config exists yet,
