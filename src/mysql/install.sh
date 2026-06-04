@@ -62,7 +62,21 @@ case "${ID}" in
 esac
 
 install -d -m 0755 /etc/apt/keyrings
-curl -fsSL https://repo.mysql.com/RPM-GPG-KEY-mysql-2023 \
+# MySQL rotates their signing key periodically (RPM-GPG-KEY-mysql-2023 expired
+# 2025-10; 2025 key is current). Fetch the newest available.
+MYSQL_KEY_URL=""
+for year in 2025 2024 2023; do
+  if curl -fsSI "https://repo.mysql.com/RPM-GPG-KEY-mysql-${year}" >/dev/null 2>&1; then
+    MYSQL_KEY_URL="https://repo.mysql.com/RPM-GPG-KEY-mysql-${year}"
+    break
+  fi
+done
+if [ -z "${MYSQL_KEY_URL}" ]; then
+  echo "mysql feature: ERROR — could not fetch any MySQL GPG key from repo.mysql.com" >&2
+  exit 1
+fi
+echo "mysql feature: using MySQL signing key ${MYSQL_KEY_URL##*/}"
+curl -fsSL "${MYSQL_KEY_URL}" \
   | gpg --batch --yes --dearmor -o /etc/apt/keyrings/mysql.gpg
 chmod 0644 /etc/apt/keyrings/mysql.gpg
 

@@ -6,7 +6,7 @@
 set -euo pipefail
 
 PHP_VERSION="${VERSION:-8.4}"
-PHP_EXTENSIONS="${EXTENSIONS:-mbstring intl xml zip gd curl mysql pgsql redis opcache sodium bcmath pcntl gmp}"
+PHP_EXTENSIONS="${EXTENSIONS:-mbstring intl xml zip gd curl mysql pgsql redis opcache bcmath gmp}"
 INSTALL_COMPOSER="${INSTALLCOMPOSER:-true}"
 INSTALL_XDEBUG="${INSTALLXDEBUG:-false}"
 INSTALL_FPM="${INSTALLFPM:-false}"
@@ -51,9 +51,9 @@ apt-get install -y --no-install-recommends ca-certificates curl gnupg lsb-releas
 . /etc/os-release
 ARCH="$(dpkg --print-architecture)"
 
-# Sury publishes per Debian/Ubuntu codename. Some interim Ubuntu releases lag;
-# fall back to the most recent LTS Sury supports (noble at time of writing).
-SURY_SUPPORTED_UBUNTU="noble jammy focal"
+# packages.sury.org/php publishes for current Debian + Ubuntu codenames
+# including resolute (26.04). Fall back to the most recent LTS for unknown.
+SURY_SUPPORTED_UBUNTU="resolute plucky noble jammy focal"
 SURY_SUPPORTED_DEBIAN="trixie bookworm bullseye"
 codename="${VERSION_CODENAME:-noble}"
 
@@ -63,14 +63,12 @@ case "${ID}" in
       echo "php feature: '${codename}' has no Sury Debian channel; falling back to bookworm"
       codename="bookworm"
     fi
-    SURY_URL="https://packages.sury.org/php/"
     ;;
   ubuntu|*)
     if ! echo "${SURY_SUPPORTED_UBUNTU}" | grep -qw "${codename}"; then
       echo "php feature: '${codename}' has no Sury Ubuntu channel; falling back to noble"
       codename="noble"
     fi
-    SURY_URL="https://packages.sury.org/php/"
     ;;
 esac
 
@@ -79,8 +77,40 @@ curl -fsSL https://packages.sury.org/php/apt.gpg \
   | gpg --batch --yes --dearmor -o /etc/apt/keyrings/sury-php.gpg
 chmod 0644 /etc/apt/keyrings/sury-php.gpg
 
-echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/sury-php.gpg] ${SURY_URL} ${codename} main" \
+echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/sury-php.gpg] https://packages.sury.org/php/ ${codename} main" \
   > /etc/apt/sources.list.d/sury-php.list
+
+# PECL extensions (redis, xdebug, imagick, etc.) and tools like xdebug are
+# only in the broader Launchpad PPA, not in packages.sury.org main. Add it
+# conditionally when any PECL extension is requested. The Launchpad PPA does
+# not yet publish for resolute/plucky — use noble for those.
+PECL_EXTENSIONS_LIST=" redis imagick memcached memcache mongodb amqp igbinary msgpack swoole openswoole apcu yaml uuid grpc protobuf solr ssh2 oauth "
+need_launchpad_ppa=false
+for ext in ${PHP_EXTENSIONS}; do
+  ext_lc="$(echo "${ext}" | tr '[:upper:]' '[:lower:]')"
+  case "${PECL_EXTENSIONS_LIST}" in
+    *" ${ext_lc} "*) need_launchpad_ppa=true; break ;;
+  esac
+done
+if [ "${INSTALL_XDEBUG}" = "true" ]; then
+  need_launchpad_ppa=true
+fi
+
+if [ "${need_launchpad_ppa}" = true ] && [ "${ID:-ubuntu}" = "ubuntu" ]; then
+  PPA_CODENAME="${codename}"
+  case "${PPA_CODENAME}" in
+    resolute|plucky|questing|oracular) PPA_CODENAME="noble" ;;
+  esac
+
+  # Ondřej Surý's Launchpad signing key fingerprint.
+  curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x14AA40EC0831756756D7F66C4F4EA0AAE5267A6C" \
+    | gpg --batch --yes --dearmor -o /etc/apt/keyrings/ondrej-php-ppa.gpg
+  chmod 0644 /etc/apt/keyrings/ondrej-php-ppa.gpg
+
+  echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/ondrej-php-ppa.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu/ ${PPA_CODENAME} main" \
+    > /etc/apt/sources.list.d/ondrej-php-ppa.list
+  echo "php feature: enabled Launchpad PPA ondrej/php (${PPA_CODENAME}) for PECL extensions"
+fi
 
 apt-get update -y
 

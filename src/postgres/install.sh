@@ -35,7 +35,7 @@ ARCH="$(dpkg --print-architecture)"
 
 # PGDG publishes for all current Debian + Ubuntu codenames; fall back to a
 # recent LTS for interim releases.
-PG_SUPPORTED_UBUNTU="noble jammy focal"
+PG_SUPPORTED_UBUNTU="resolute plucky noble jammy focal"
 PG_SUPPORTED_DEBIAN="trixie bookworm bullseye"
 codename="${VERSION_CODENAME:-noble}"
 

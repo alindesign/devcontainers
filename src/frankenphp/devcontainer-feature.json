@@ -12,7 +12,6 @@
     }
   },
   "installsAfter": [
-    "ghcr.io/devcontainers/features/common-utils",
-    "ghcr.io/alindesign/features/php"
+    "ghcr.io/devcontainers/features/common-utils"
   ]
 }

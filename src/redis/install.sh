@@ -35,7 +35,7 @@ install -d -m 0755 /etc/apt/keyrings
 
 if [ "${VARIANT}" = "redis" ]; then
   # Official Redis APT repo (packages.redis.io). Supports the major Ubuntu/Debian codenames.
-  REDIS_SUPPORTED_UBUNTU="noble jammy focal"
+  REDIS_SUPPORTED_UBUNTU="resolute plucky noble jammy focal"
   REDIS_SUPPORTED_DEBIAN="trixie bookworm bullseye"
   codename="${VERSION_CODENAME:-noble}"
   case "${ID}" in

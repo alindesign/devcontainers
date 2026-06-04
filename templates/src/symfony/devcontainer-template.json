@@ -32,8 +32,16 @@
       "default": "symfony",
       "description": "PostgreSQL password for appUser."
     },
-    "gitUserName": { "type": "string", "default": "" },
-    "gitUserEmail": { "type": "string", "default": "" }
+    "gitUserName": {
+      "type": "string",
+      "default": "",
+      "description": "git user.name (optional; can also be set after the fact)."
+    },
+    "gitUserEmail": {
+      "type": "string",
+      "default": "",
+      "description": "git user.email (optional; can also be set after the fact)."
+    }
   },
   "platforms": ["php", "symfony"],
   "publisher": "alindesign",

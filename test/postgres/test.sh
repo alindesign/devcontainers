@@ -6,7 +6,7 @@ source dev-container-features-test-lib
 # Active probe — dispatcher does not run from `features test`.
 sudo /etc/devcontainer-services.d/20-postgres.sh
 
-PG_VERSION="$(ls /usr/lib/postgresql/ | sort -n | tail -n1)"
+PG_VERSION="$(find /usr/lib/postgresql -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -n | tail -n1)"
 
 check "postgres binary present" test -x "/usr/lib/postgresql/${PG_VERSION}/bin/postgres"
 check "psql client present" command -v psql
