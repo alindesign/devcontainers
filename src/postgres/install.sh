@@ -100,6 +100,10 @@ cat > /etc/devcontainer-services.d/20-postgres.sh <<'EOF'
 # that don't compose well with volume-mounted data dirs).
 set -e
 
+# PGHOST in the parent env would push psql to TCP. Force socket-only
+# admin connections so peer/trust auth on the local socket works.
+unset PGHOST PGPORT PGUSER PGPASSWORD
+
 # shellcheck disable=SC1091
 . /etc/devcontainer-services.d/20-postgres.conf
 
@@ -169,13 +173,13 @@ fi
 SENTINEL="${CLUSTER_DIR}/.devcontainer-bootstrapped"
 if [ ! -f "${SENTINEL}" ]; then
   if [ -n "${ROOT_PASSWORD}" ]; then
-    sudo -u postgres psql -p "${PG_PORT}" -v ON_ERROR_STOP=1 \
+    sudo -u postgres psql -h /var/run/postgresql -p "${PG_PORT}" -v ON_ERROR_STOP=1 \
       -v rootpw="${ROOT_PASSWORD}" <<'SQL'
 ALTER USER postgres WITH PASSWORD :'rootpw';
 SQL
   fi
   if [ -n "${CREATE_USER}" ]; then
-    sudo -u postgres psql -p "${PG_PORT}" -v ON_ERROR_STOP=1 \
+    sudo -u postgres psql -h /var/run/postgresql -p "${PG_PORT}" -v ON_ERROR_STOP=1 \
       -v username="${CREATE_USER}" -v password="${CREATE_PASSWORD}" <<'SQL'
 SELECT format('CREATE ROLE %I WITH LOGIN CREATEDB PASSWORD %L', :'username', :'password')
 WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = :'username')
@@ -183,9 +187,9 @@ WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = :'username')
 SQL
   fi
   if [ -n "${CREATE_DATABASE}" ]; then
-    if ! sudo -u postgres psql -p "${PG_PORT}" -tAc "SELECT 1 FROM pg_database WHERE datname='${CREATE_DATABASE//\'/}'" | grep -q 1; then
+    if ! sudo -u postgres psql -h /var/run/postgresql -p "${PG_PORT}" -tAc "SELECT 1 FROM pg_database WHERE datname='${CREATE_DATABASE//\'/}'" | grep -q 1; then
       OWNER="${CREATE_USER:-postgres}"
-      sudo -u postgres psql -p "${PG_PORT}" -v ON_ERROR_STOP=1 \
+      sudo -u postgres psql -h /var/run/postgresql -p "${PG_PORT}" -v ON_ERROR_STOP=1 \
         -v dbname="${CREATE_DATABASE}" -v owner="${OWNER}" <<'SQL'
 SELECT format('CREATE DATABASE %I OWNER %I', :'dbname', :'owner')
 \gexec

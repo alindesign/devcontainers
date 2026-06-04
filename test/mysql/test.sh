@@ -7,13 +7,17 @@ source dev-container-features-test-lib
 # start the service via the dispatcher script ourselves, then verify the daemon.
 sudo /etc/devcontainer-services.d/10-mysql.sh
 
+# Defensive: clear MYSQL_HOST so root socket connections in the checks below
+# aren't redirected to TCP by an inherited env var.
+unset MYSQL_HOST MYSQL_TCP_PORT MYSQL_PWD
+
 check "mysqld binary present" command -v mysqld
 check "mysql client present" command -v mysql
 check "dispatcher script installed" test -x /etc/devcontainer-services.d/10-mysql.sh
 check "entrypoint wrapper installed" test -x /usr/local/share/mysql-init.sh
 check "data dir initialized" test -d /var/lib/mysql/mysql
 check "mysqld accepting connections" sh -c 'sudo mysqladmin --socket=/var/run/mysqld/mysqld.sock --connect-timeout=5 ping | grep -q "is alive"'
-check "appdb exists" sh -c 'sudo mysql --socket=/var/run/mysqld/mysqld.sock -uroot -Nse "SHOW DATABASES" | grep -qx appdb'
-check "appuser can connect via TCP" sh -c 'mysql -h 127.0.0.1 -uappuser -papppass -e "SELECT 1;" appdb | grep -q 1'
+check "appdb exists" sh -c 'sudo mysql --protocol=socket --socket=/var/run/mysqld/mysqld.sock -uroot -Nse "SHOW DATABASES" | grep -qx appdb'
+check "appuser can connect via TCP" sh -c 'mysql --protocol=tcp -h 127.0.0.1 -uappuser -papppass -e "SELECT 1;" appdb | grep -q 1'
 
 reportResults

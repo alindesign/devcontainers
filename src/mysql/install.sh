@@ -140,6 +140,11 @@ cat > /etc/devcontainer-services.d/10-mysql.sh <<'EOF'
 # devcontainer service: mysql
 set -e
 
+# MYSQL_HOST / MYSQL_TCP_PORT in the parent env would force the mysql client
+# to TCP and override --socket=. Clear them so socket auth as root@localhost
+# works reliably regardless of how the caller invoked us.
+unset MYSQL_HOST MYSQL_TCP_PORT MYSQL_PWD
+
 # shellcheck disable=SC1091
 . /etc/devcontainer-services.d/10-mysql.conf
 
@@ -194,16 +199,16 @@ fi
 SENTINEL="${DATADIR}/.devcontainer-bootstrapped"
 if [ ! -f "${SENTINEL}" ]; then
   if [ -n "${ROOT_PASSWORD}" ]; then
-    mysql --socket="${SOCKET}" -uroot -e \
+    mysql --protocol=socket --socket="${SOCKET}" -uroot -e \
       "ALTER USER 'root'@'localhost' IDENTIFIED BY '${ROOT_PASSWORD//\'/\'\'}'; FLUSH PRIVILEGES;"
   fi
   if [ -n "${CREATE_DATABASE}" ]; then
-    mysql --socket="${SOCKET}" -uroot -e \
+    mysql --protocol=socket --socket="${SOCKET}" -uroot -e \
       "CREATE DATABASE IF NOT EXISTS \`${CREATE_DATABASE//\`/}\`;"
   fi
   if [ -n "${CREATE_USER}" ]; then
     SCOPE="${CREATE_DATABASE:-*}"
-    mysql --socket="${SOCKET}" -uroot -e \
+    mysql --protocol=socket --socket="${SOCKET}" -uroot -e \
       "CREATE USER IF NOT EXISTS '${CREATE_USER//\'/\'\'}'@'%' IDENTIFIED BY '${CREATE_PASSWORD//\'/\'\'}'; \
        GRANT ALL PRIVILEGES ON \`${SCOPE//\`/}\`.* TO '${CREATE_USER//\'/\'\'}'@'%'; \
        FLUSH PRIVILEGES;"
