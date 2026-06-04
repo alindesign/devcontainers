@@ -95,51 +95,59 @@ chmod 0600 /etc/devcontainer-services.d/20-postgres.conf
 cat > /etc/devcontainer-services.d/20-postgres.sh <<'EOF'
 #!/usr/bin/env bash
 # devcontainer service: postgres
-# Uses Debian's pg_createcluster / pg_ctlcluster wrappers — they handle the
-# socket dir, /etc paths, hba defaults, and start-conf semantics correctly.
+# Direct initdb + pg_ctl. Mirrors the official postgres docker image pattern
+# (more reliable than Debian's pg_createcluster which validates state in ways
+# that don't compose well with volume-mounted data dirs).
 set -e
 
 # shellcheck disable=SC1091
 . /etc/devcontainer-services.d/20-postgres.conf
 
-CLUSTER_DIR="/var/lib/postgresql/${PG_VERSION}/main"
-CONF_DIR="/etc/postgresql/${PG_VERSION}/main"
+PGDATA="/var/lib/postgresql/${PG_VERSION}/main"
+BIN_DIR="/usr/lib/postgresql/${PG_VERSION}/bin"
 
-# Re-chown every boot — guards against uid drift across apt upgrades AND
-# fresh named-volume mounts (which start owned by root).
-install -d -m 0755 -o postgres -g postgres /var/lib/postgresql
+# Runtime dirs that postgres needs MUST exist before initdb runs — initdb's
+# final pg_ctl start uses the default unix socket dir.
+install -d -m 02775 -o postgres -g postgres /var/run/postgresql /var/log/postgresql
+install -d -m 0755 -o postgres -g postgres /var/lib/postgresql "/var/lib/postgresql/${PG_VERSION}"
 chown -R postgres:postgres /var/lib/postgresql
 
-install -d -m 02775 -o postgres -g postgres /var/run/postgresql /var/log/postgresql
+# Initialise on fresh data dir.
+if [ ! -s "${PGDATA}/PG_VERSION" ]; then
+  install -d -m 0700 -o postgres -g postgres "${PGDATA}"
+  # Strip any stale unix socket files from /tmp that could confuse the
+  # post-bootstrap pg_ctl that initdb invokes.
+  find /tmp -maxdepth 1 -name '.s.PGSQL.*' -delete 2>/dev/null || true
 
-# (Re)create the cluster if missing (covers fresh named-volume mount).
-if [ ! -s "${CLUSTER_DIR}/PG_VERSION" ]; then
-  # Clean any stale /etc config left over from a removed cluster on the
-  # underlying fs (gets shadowed when /var/lib/postgresql is volume-mounted).
-  rm -rf "${CONF_DIR}"
-  pg_createcluster "${PG_VERSION}" main \
-    --start-conf=manual \
-    --datadir="${CLUSTER_DIR}" \
-    -- \
+  sudo -u postgres "${BIN_DIR}/initdb" \
+    -D "${PGDATA}" \
     --auth-local=trust \
     --auth-host=scram-sha-256 \
     --encoding=UTF8 \
     --locale=C.UTF-8
 
-  # Drop our override snippet via Debian's conf.d include pattern.
-  install -d -m 0755 -o postgres -g postgres "${CONF_DIR}/conf.d"
-  cat > "${CONF_DIR}/conf.d/devcontainer.conf" <<CONF
+  cat >> "${PGDATA}/postgresql.conf" <<CONF
+
+# devcontainer overrides
 listen_addresses = '127.0.0.1'
 port = ${PG_PORT}
+unix_socket_directories = '/var/run/postgresql'
 CONF
-  chown postgres:postgres "${CONF_DIR}/conf.d/devcontainer.conf"
+  chown postgres:postgres "${PGDATA}/postgresql.conf"
 fi
 
-# Skip if already online.
-if pg_lsclusters --no-header 2>/dev/null | awk -v ver="${PG_VERSION}" '$1==ver && $2=="main" {print $4}' | grep -qx online; then
+# Skip if already running.
+if sudo -u postgres "${BIN_DIR}/pg_ctl" -D "${PGDATA}" status >/dev/null 2>&1; then
   :
 else
-  pg_ctlcluster "${PG_VERSION}" main start
+  sudo -u postgres "${BIN_DIR}/pg_ctl" \
+    -D "${PGDATA}" \
+    -l /var/log/postgresql/postgres.log \
+    -w start || {
+      echo "postgres service: pg_ctl start failed — dumping log:" >&2
+      tail -n 100 /var/log/postgresql/postgres.log >&2 2>/dev/null || true
+      exit 1
+    }
 fi
 
 # Wait for the daemon to accept queries.
@@ -153,7 +161,7 @@ for _ in $(seq 1 90); do
 done
 if [ "${ready}" -ne 1 ]; then
   echo "postgres service: server failed to become ready — dumping log:" >&2
-  tail -n 80 "/var/log/postgresql/postgresql-${PG_VERSION}-main.log" 2>/dev/null >&2 || true
+  tail -n 100 /var/log/postgresql/postgres.log 2>/dev/null >&2 || true
   exit 1
 fi
 

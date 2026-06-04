@@ -109,7 +109,7 @@ cat > /etc/mysql/conf.d/devcontainer.cnf <<EOF
 bind-address = 127.0.0.1
 port = ${MYSQL_PORT}
 skip-name-resolve = 1
-default-authentication-plugin = caching_sha2_password
+log-error = /var/log/mysql/error.log
 innodb_buffer_pool_size = 256M
 character-set-server = utf8mb4
 collation-server = utf8mb4_unicode_ci
@@ -159,22 +159,34 @@ if mysqladmin --socket="${SOCKET}" --silent --connect-timeout=2 ping >/dev/null 
   exit 0
 fi
 
-nohup mysqld --user=mysql --datadir="${DATADIR}" --port="${MYSQL_PORT}" \
+# Force console logging so any startup error reaches our redirect.
+nohup mysqld --user=mysql --datadir="${DATADIR}" --port="${MYSQL_PORT}" --console \
   > /var/log/mysql/init.log 2>&1 &
+MYSQLD_PID=$!
 
-# Wait up to ~90s for the daemon to accept connections (cold start on a
-# fresh data dir + slow CI runner can take 30-60s).
+# Wait up to ~3 min for the daemon to accept connections. First boot on a
+# fresh data dir (SSL cert gen, sys schema population, ...) can be slow on
+# CI runners.
 ready=0
-for _ in $(seq 1 180); do
+for _ in $(seq 1 360); do
   if mysqladmin --socket="${SOCKET}" --silent --connect-timeout=1 ping >/dev/null 2>&1; then
     ready=1
+    break
+  fi
+  if ! kill -0 "${MYSQLD_PID}" 2>/dev/null; then
+    # mysqld died — no point waiting longer
     break
   fi
   sleep 0.5
 done
 if [ "${ready}" -ne 1 ]; then
-  echo "mysql service: daemon failed to become ready within 90s — dumping /var/log/mysql/init.log:" >&2
-  tail -n 80 /var/log/mysql/init.log >&2 || true
+  echo "mysql service: daemon failed to become ready — dumping log:" >&2
+  echo "----- /var/log/mysql/init.log -----" >&2
+  tail -n 100 /var/log/mysql/init.log >&2 2>/dev/null || echo "(missing)" >&2
+  echo "----- /var/log/mysql/error.log -----" >&2
+  tail -n 100 /var/log/mysql/error.log >&2 2>/dev/null || echo "(missing)" >&2
+  echo "----- process state -----" >&2
+  ps -ef | grep mysql >&2 || true
   exit 1
 fi
 

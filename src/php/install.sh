@@ -153,26 +153,34 @@ fi
 
 apt-get install -y --no-install-recommends "${PKGS[@]}"
 
-# Build each PECL extension.
+# Build each PECL extension. `pecl install` can return non-zero even on
+# success (e.g. xdebug emits a "you should add zend_extension=..." advisory
+# which trips its exit code), so we treat the .so being present in the
+# extension_dir as the source of truth.
 if [ "${#PECL_LIST[@]}" -gt 0 ]; then
   pecl channel-update pecl.php.net 2>/dev/null || true
+  EXT_DIR="$(php-config --extension-dir 2>/dev/null || true)"
   for ext in "${PECL_LIST[@]}"; do
     echo "php feature: building PECL extension '${ext}'"
-    if pecl list "${ext}" 2>/dev/null | grep -q "${ext}"; then
-      echo "  already installed, skipping"
-      continue
+    if [ -n "${EXT_DIR}" ] && [ -f "${EXT_DIR}/${ext}.so" ]; then
+      echo "  ${ext}.so already present at ${EXT_DIR}, skipping build"
+    else
+      pecl install --force "${ext}" </dev/null 2>&1 || true
+      if [ -z "${EXT_DIR}" ]; then
+        EXT_DIR="$(php-config --extension-dir 2>/dev/null || true)"
+      fi
+      if [ -z "${EXT_DIR}" ] || [ ! -f "${EXT_DIR}/${ext}.so" ]; then
+        echo "php feature: WARN — pecl install ${ext} did not produce ${EXT_DIR}/${ext}.so; skipping" >&2
+        continue
+      fi
     fi
-    yes '' 2>/dev/null | pecl install --force "${ext}" || {
-      echo "php feature: WARN — pecl install ${ext} failed; skipping" >&2
-      continue
-    }
-    # Drop a conf.d entry pointing at the just-built .so.
+
     if [ "${ext}" = "xdebug" ]; then
-      INI_LINE="zend_extension=xdebug.so"
+      INI_LINE="zend_extension=${ext}.so"
     else
       INI_LINE="extension=${ext}.so"
     fi
-    for sapi_dir in /etc/php/${PHP_VERSION}/cli/conf.d /etc/php/${PHP_VERSION}/fpm/conf.d; do
+    for sapi_dir in "/etc/php/${PHP_VERSION}/cli/conf.d" "/etc/php/${PHP_VERSION}/fpm/conf.d"; do
       [ -d "${sapi_dir}" ] || continue
       echo "${INI_LINE}" > "${sapi_dir}/30-${ext}.ini"
     done
