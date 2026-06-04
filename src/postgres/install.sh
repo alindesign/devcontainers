@@ -144,6 +144,17 @@ fi
 if sudo -u postgres "${BIN_DIR}/pg_ctl" -D "${PGDATA}" status >/dev/null 2>&1; then
   :
 else
+  # Defensive: clear any stale postmaster.pid left behind by initdb's brief
+  # post-bootstrap server start (or by a crashed previous container).
+  if [ -f "${PGDATA}/postmaster.pid" ]; then
+    PID="$(head -n1 "${PGDATA}/postmaster.pid" 2>/dev/null || echo "")"
+    if [ -n "${PID}" ] && kill -0 "${PID}" 2>/dev/null; then
+      echo "postgres service: postmaster.pid points at live PID ${PID}; refusing to clobber" >&2
+      exit 1
+    fi
+    rm -f "${PGDATA}/postmaster.pid"
+  fi
+
   sudo -u postgres "${BIN_DIR}/pg_ctl" \
     -D "${PGDATA}" \
     -l /var/log/postgresql/postgres.log \
