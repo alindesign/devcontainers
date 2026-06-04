@@ -6,7 +6,8 @@
 set -euo pipefail
 
 PHP_VERSION="${VERSION:-8.4}"
-PHP_EXTENSIONS="${EXTENSIONS:-mbstring intl xml zip gd curl mysql pgsql redis opcache bcmath gmp}"
+PHP_EXTENSIONS="${EXTENSIONS:-mbstring intl xml zip gd curl mysql pgsql opcache bcmath gmp}"
+PHP_PECL="${PECL:-}"
 INSTALL_COMPOSER="${INSTALLCOMPOSER:-true}"
 INSTALL_XDEBUG="${INSTALLXDEBUG:-false}"
 INSTALL_FPM="${INSTALLFPM:-false}"
@@ -80,38 +81,6 @@ chmod 0644 /etc/apt/keyrings/sury-php.gpg
 echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/sury-php.gpg] https://packages.sury.org/php/ ${codename} main" \
   > /etc/apt/sources.list.d/sury-php.list
 
-# PECL extensions (redis, xdebug, imagick, etc.) and tools like xdebug are
-# only in the broader Launchpad PPA, not in packages.sury.org main. Add it
-# conditionally when any PECL extension is requested. The Launchpad PPA does
-# not yet publish for resolute/plucky — use noble for those.
-PECL_EXTENSIONS_LIST=" redis imagick memcached memcache mongodb amqp igbinary msgpack swoole openswoole apcu yaml uuid grpc protobuf solr ssh2 oauth "
-need_launchpad_ppa=false
-for ext in ${PHP_EXTENSIONS}; do
-  ext_lc="$(echo "${ext}" | tr '[:upper:]' '[:lower:]')"
-  case "${PECL_EXTENSIONS_LIST}" in
-    *" ${ext_lc} "*) need_launchpad_ppa=true; break ;;
-  esac
-done
-if [ "${INSTALL_XDEBUG}" = "true" ]; then
-  need_launchpad_ppa=true
-fi
-
-if [ "${need_launchpad_ppa}" = true ] && [ "${ID:-ubuntu}" = "ubuntu" ]; then
-  PPA_CODENAME="${codename}"
-  case "${PPA_CODENAME}" in
-    resolute|plucky|questing|oracular) PPA_CODENAME="noble" ;;
-  esac
-
-  # Ondřej Surý's Launchpad signing key fingerprint.
-  curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x14AA40EC0831756756D7F66C4F4EA0AAE5267A6C" \
-    | gpg --batch --yes --dearmor -o /etc/apt/keyrings/ondrej-php-ppa.gpg
-  chmod 0644 /etc/apt/keyrings/ondrej-php-ppa.gpg
-
-  echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/ondrej-php-ppa.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu/ ${PPA_CODENAME} main" \
-    > /etc/apt/sources.list.d/ondrej-php-ppa.list
-  echo "php feature: enabled Launchpad PPA ondrej/php (${PPA_CODENAME}) for PECL extensions"
-fi
-
 apt-get update -y
 
 # --- assemble package list --------------------------------------------------
@@ -140,30 +109,75 @@ PKGS=( "php${PHP_VERSION}-cli" "php${PHP_VERSION}-common" "php${PHP_VERSION}-rea
 if [ "${INSTALL_FPM}" = "true" ]; then
   PKGS+=( "php${PHP_VERSION}-fpm" )
 fi
-if [ "${INSTALL_XDEBUG}" = "true" ]; then
-  PKGS+=( "php${PHP_VERSION}-xdebug" )
-fi
 
-# Extensions that Sury ships *un-versioned* (single binary, DSO-linked against
-# every installed PHP). Keep this list narrow; everything else gets the
-# version-suffixed package.
-is_unversioned_ext() {
-  case "$1" in
-    imagick|memcached|memcache|mongodb|amqp) return 0 ;;
-    *) return 1 ;;
-  esac
-}
-
+# Build a sanitized, deduped list of apt extensions for the requested PHP
+# version. packages.sury.org/php/main only ships a subset of PECL extensions;
+# the rest go through `pecl install` below.
+SANITIZED_EXTS=()
 while IFS= read -r ext; do
   [ -z "${ext}" ] && continue
-  if is_unversioned_ext "${ext}"; then
-    PKGS+=( "php-${ext}" )
-  else
-    PKGS+=( "php${PHP_VERSION}-${ext}" )
-  fi
+  SANITIZED_EXTS+=("${ext}")
 done < <(sanitize_extensions "${PHP_EXTENSIONS}")
 
+for ext in "${SANITIZED_EXTS[@]}"; do
+  PKGS+=( "php${PHP_VERSION}-${ext}" )
+done
+
+# PECL extensions to build from source. `xdebug` is a zend_extension; install
+# via PECL when requested by either installXdebug=true or pecl='xdebug'.
+PECL_LIST=()
+for tok in ${PHP_PECL}; do
+  tok_lc="$(echo "${tok}" | tr '[:upper:]' '[:lower:]')"
+  case "${tok_lc}" in
+    ""|*[!a-z0-9_-]*) continue ;;
+  esac
+  # Skip duplicates.
+  found=0
+  for existing in "${PECL_LIST[@]}"; do
+    [ "${existing}" = "${tok_lc}" ] && { found=1; break; }
+  done
+  [ "${found}" -eq 0 ] && PECL_LIST+=("${tok_lc}")
+done
+if [ "${INSTALL_XDEBUG}" = "true" ]; then
+  already=0
+  for e in "${PECL_LIST[@]}"; do
+    [ "${e}" = "xdebug" ] && { already=1; break; }
+  done
+  [ "${already}" -eq 0 ] && PECL_LIST+=("xdebug")
+fi
+
+# When PECL builds are needed, install php-dev + build toolchain.
+if [ "${#PECL_LIST[@]}" -gt 0 ]; then
+  PKGS+=( "php${PHP_VERSION}-dev" "php-pear" build-essential autoconf pkg-config libssl-dev )
+fi
+
 apt-get install -y --no-install-recommends "${PKGS[@]}"
+
+# Build each PECL extension.
+if [ "${#PECL_LIST[@]}" -gt 0 ]; then
+  pecl channel-update pecl.php.net 2>/dev/null || true
+  for ext in "${PECL_LIST[@]}"; do
+    echo "php feature: building PECL extension '${ext}'"
+    if pecl list "${ext}" 2>/dev/null | grep -q "${ext}"; then
+      echo "  already installed, skipping"
+      continue
+    fi
+    yes '' 2>/dev/null | pecl install --force "${ext}" || {
+      echo "php feature: WARN — pecl install ${ext} failed; skipping" >&2
+      continue
+    }
+    # Drop a conf.d entry pointing at the just-built .so.
+    if [ "${ext}" = "xdebug" ]; then
+      INI_LINE="zend_extension=xdebug.so"
+    else
+      INI_LINE="extension=${ext}.so"
+    fi
+    for sapi_dir in /etc/php/${PHP_VERSION}/cli/conf.d /etc/php/${PHP_VERSION}/fpm/conf.d; do
+      [ -d "${sapi_dir}" ] || continue
+      echo "${INI_LINE}" > "${sapi_dir}/30-${ext}.ini"
+    done
+  done
+fi
 
 apt-get clean
 rm -rf /var/lib/apt/lists/*

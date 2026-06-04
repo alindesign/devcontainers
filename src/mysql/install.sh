@@ -162,9 +162,10 @@ fi
 nohup mysqld --user=mysql --datadir="${DATADIR}" --port="${MYSQL_PORT}" \
   > /var/log/mysql/init.log 2>&1 &
 
-# Wait up to ~30s for the daemon to accept connections.
+# Wait up to ~90s for the daemon to accept connections (cold start on a
+# fresh data dir + slow CI runner can take 30-60s).
 ready=0
-for _ in $(seq 1 60); do
+for _ in $(seq 1 180); do
   if mysqladmin --socket="${SOCKET}" --silent --connect-timeout=1 ping >/dev/null 2>&1; then
     ready=1
     break
@@ -172,7 +173,8 @@ for _ in $(seq 1 60); do
   sleep 0.5
 done
 if [ "${ready}" -ne 1 ]; then
-  echo "mysql service: daemon failed to become ready (see /var/log/mysql/init.log)" >&2
+  echo "mysql service: daemon failed to become ready within 90s — dumping /var/log/mysql/init.log:" >&2
+  tail -n 80 /var/log/mysql/init.log >&2 || true
   exit 1
 fi
 

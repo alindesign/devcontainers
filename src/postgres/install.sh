@@ -95,6 +95,8 @@ chmod 0600 /etc/devcontainer-services.d/20-postgres.conf
 cat > /etc/devcontainer-services.d/20-postgres.sh <<'EOF'
 #!/usr/bin/env bash
 # devcontainer service: postgres
+# Uses Debian's pg_createcluster / pg_ctlcluster wrappers — they handle the
+# socket dir, /etc paths, hba defaults, and start-conf semantics correctly.
 set -e
 
 # shellcheck disable=SC1091
@@ -102,62 +104,69 @@ set -e
 
 CLUSTER_DIR="/var/lib/postgresql/${PG_VERSION}/main"
 CONF_DIR="/etc/postgresql/${PG_VERSION}/main"
-BIN_DIR="/usr/lib/postgresql/${PG_VERSION}/bin"
 
-# Re-chown every boot — guards against uid drift across apt upgrades.
+# Re-chown every boot — guards against uid drift across apt upgrades AND
+# fresh named-volume mounts (which start owned by root).
+install -d -m 0755 -o postgres -g postgres /var/lib/postgresql
 chown -R postgres:postgres /var/lib/postgresql
 
-# Initialise the cluster if it doesn't exist.
+install -d -m 02775 -o postgres -g postgres /var/run/postgresql /var/log/postgresql
+
+# (Re)create the cluster if missing (covers fresh named-volume mount).
 if [ ! -s "${CLUSTER_DIR}/PG_VERSION" ]; then
-  install -d -m 0755 -o postgres -g postgres "${CONF_DIR}"
-  install -d -m 0700 -o postgres -g postgres "${CLUSTER_DIR}"
-  PWFILE="$(mktemp)"
-  printf '%s' "${ROOT_PASSWORD}" > "${PWFILE}"
-  chown postgres:postgres "${PWFILE}"
-  chmod 0600 "${PWFILE}"
-  sudo -u postgres "${BIN_DIR}/initdb" \
-    -D "${CLUSTER_DIR}" \
+  # Clean any stale /etc config left over from a removed cluster on the
+  # underlying fs (gets shadowed when /var/lib/postgresql is volume-mounted).
+  rm -rf "${CONF_DIR}"
+  pg_createcluster "${PG_VERSION}" main \
+    --start-conf=manual \
+    --datadir="${CLUSTER_DIR}" \
+    -- \
     --auth-local=trust \
     --auth-host=scram-sha-256 \
-    --pwfile="${PWFILE}" \
     --encoding=UTF8 \
     --locale=C.UTF-8
-  rm -f "${PWFILE}"
 
-  cat > "${CLUSTER_DIR}/postgresql.auto.conf" <<CONF
+  # Drop our override snippet via Debian's conf.d include pattern.
+  install -d -m 0755 -o postgres -g postgres "${CONF_DIR}/conf.d"
+  cat > "${CONF_DIR}/conf.d/devcontainer.conf" <<CONF
 listen_addresses = '127.0.0.1'
 port = ${PG_PORT}
-shared_buffers = 128MB
-unix_socket_directories = '/var/run/postgresql, ${CLUSTER_DIR}'
 CONF
-  chown postgres:postgres "${CLUSTER_DIR}/postgresql.auto.conf"
-
-  cat > "${CLUSTER_DIR}/pg_hba.conf" <<HBA
-local   all             postgres                                trust
-local   all             all                                     trust
-host    all             all             127.0.0.1/32            scram-sha-256
-host    all             all             ::1/128                 scram-sha-256
-HBA
-  chown postgres:postgres "${CLUSTER_DIR}/pg_hba.conf"
+  chown postgres:postgres "${CONF_DIR}/conf.d/devcontainer.conf"
 fi
 
-# Skip if already running.
-install -d -m 0755 -o postgres -g postgres /var/run/postgresql
-if sudo -u postgres "${BIN_DIR}/pg_isready" -h /var/run/postgresql -p "${PG_PORT}" >/dev/null 2>&1; then
-  exit 0
+# Skip if already online.
+if pg_lsclusters --no-header 2>/dev/null | awk -v ver="${PG_VERSION}" '$1==ver && $2=="main" {print $4}' | grep -qx online; then
+  :
+else
+  pg_ctlcluster "${PG_VERSION}" main start
 fi
 
-sudo -u postgres "${BIN_DIR}/pg_ctl" \
-  -D "${CLUSTER_DIR}" \
-  -l "/var/log/postgresql/postgresql-${PG_VERSION}-main.log" \
-  -o "-p ${PG_PORT}" \
-  -w start
+# Wait for the daemon to accept queries.
+ready=0
+for _ in $(seq 1 90); do
+  if sudo -u postgres pg_isready -h /var/run/postgresql -p "${PG_PORT}" >/dev/null 2>&1; then
+    ready=1
+    break
+  fi
+  sleep 1
+done
+if [ "${ready}" -ne 1 ]; then
+  echo "postgres service: server failed to become ready — dumping log:" >&2
+  tail -n 80 "/var/log/postgresql/postgresql-${PG_VERSION}-main.log" 2>/dev/null >&2 || true
+  exit 1
+fi
 
 # One-shot bootstrap.
 SENTINEL="${CLUSTER_DIR}/.devcontainer-bootstrapped"
 if [ ! -f "${SENTINEL}" ]; then
+  if [ -n "${ROOT_PASSWORD}" ]; then
+    sudo -u postgres psql -p "${PG_PORT}" -v ON_ERROR_STOP=1 \
+      -v rootpw="${ROOT_PASSWORD}" <<'SQL'
+ALTER USER postgres WITH PASSWORD :'rootpw';
+SQL
+  fi
   if [ -n "${CREATE_USER}" ]; then
-    # Pass via psql -v to avoid SQL string-escaping hell.
     sudo -u postgres psql -p "${PG_PORT}" -v ON_ERROR_STOP=1 \
       -v username="${CREATE_USER}" -v password="${CREATE_PASSWORD}" <<'SQL'
 SELECT format('CREATE ROLE %I WITH LOGIN CREATEDB PASSWORD %L', :'username', :'password')
@@ -166,7 +175,7 @@ WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = :'username')
 SQL
   fi
   if [ -n "${CREATE_DATABASE}" ]; then
-    if ! sudo -u postgres psql -p "${PG_PORT}" -tAc "SELECT 1 FROM pg_database WHERE datname='${CREATE_DATABASE//\'/\'\'}'" | grep -q 1; then
+    if ! sudo -u postgres psql -p "${PG_PORT}" -tAc "SELECT 1 FROM pg_database WHERE datname='${CREATE_DATABASE//\'/}'" | grep -q 1; then
       OWNER="${CREATE_USER:-postgres}"
       sudo -u postgres psql -p "${PG_PORT}" -v ON_ERROR_STOP=1 \
         -v dbname="${CREATE_DATABASE}" -v owner="${OWNER}" <<'SQL'

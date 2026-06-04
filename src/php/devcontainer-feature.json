@@ -13,8 +13,13 @@
     },
     "extensions": {
       "type": "string",
-      "default": "mbstring intl xml zip gd curl mysql pgsql redis opcache bcmath gmp",
-      "description": "Space-separated extension list. Each becomes `php<version>-<ext>` via apt. PECL extensions (`redis`, `imagick`, `memcached`, `mongodb`, `amqp`, `igbinary`, `msgpack`, `swoole`, `apcu`, `yaml`, `uuid`) auto-add the Launchpad PPA `ppa:ondrej/php` since they aren't in `packages.sury.org/php/main`. Sodium and pcntl are built into php-cli — don't list them."
+      "default": "mbstring intl xml zip gd curl mysql pgsql opcache bcmath gmp",
+      "description": "Space-separated extension list. Each becomes `php<version>-<ext>` via apt. Only extensions in `packages.sury.org/php/main` work here. Sodium and pcntl are built into php-cli. For PECL extensions like `redis`, `imagick`, `xdebug`, set `pecl` field. For PHP-level Redis access, prefer the `predis/predis` Composer package — no extension needed."
+    },
+    "pecl": {
+      "type": "string",
+      "default": "",
+      "description": "Space-separated PECL extensions to build from source (e.g. 'redis imagick'). Each is fetched and compiled with phpize; ~30s per extension. Use this when you need a PECL ext that isn't in `packages.sury.org/php/main`."
     },
     "installComposer": {
       "type": "boolean",

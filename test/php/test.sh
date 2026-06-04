@@ -11,7 +11,6 @@ check "mbstring loaded" sh -c 'php -m | grep -qi "^mbstring$"'
 check "intl loaded" sh -c 'php -m | grep -qi "^intl$"'
 check "pdo_mysql loaded" sh -c 'php -m | grep -qi "^pdo_mysql$"'
 check "pdo_pgsql loaded" sh -c 'php -m | grep -qi "^pdo_pgsql$"'
-check "redis loaded" sh -c 'php -m | grep -qi "^redis$"'
 check "opcache loaded" sh -c 'php -m | grep -qi "^Zend OPcache$"'
 
 reportResults
