@@ -24,8 +24,16 @@ Reusable [Dev Container Features](https://containers.dev/implementors/features/)
 | [claude](src/claude) | `ghcr.io/alindesign/features/claude:1` | Claude Code CLI via npm. Bootstraps Node if missing. |
 | [aws-cli](src/aws-cli) | `ghcr.io/alindesign/features/aws-cli:1` | AWS CLI v2 from the official installer |
 | [gcloud](src/gcloud) | `ghcr.io/alindesign/features/gcloud:1` | gcloud CLI via Google apt repo (with components option) |
+| [php](src/php) | `ghcr.io/alindesign/features/php:1` | PHP via Sury + Composer + opt-in Xdebug / FPM / Symfony CLI / Laravel installer |
+| [mysql](src/mysql) | `ghcr.io/alindesign/features/mysql:1` | In-container MySQL Community Server (8.4 LTS default) with persistent volume |
+| [postgres](src/postgres) | `ghcr.io/alindesign/features/postgres:1` | In-container PostgreSQL (18 default) via PGDG with persistent volume |
+| [redis](src/redis) | `ghcr.io/alindesign/features/redis:1` | In-container Redis (or Valkey via `variant`) with persistent volume |
+| [frankenphp](src/frankenphp) | `ghcr.io/alindesign/features/frankenphp:1` | FrankenPHP (Caddy + embedded PHP) single-binary app server |
+| [mailpit](src/mailpit) | `ghcr.io/alindesign/features/mailpit:1` | Local SMTP catcher with web UI (1025 / 8025) |
 
 The mise-based features (`node`, `go`, `java`, `python`) all auto-bootstrap mise if you don't add the `mise` feature explicitly — they share the same `MISE_DATA_DIR` so adding more is incremental and cheap. `rust` uses rustup directly with system-wide `RUSTUP_HOME`/`CARGO_HOME`.
+
+The server features (`mysql`, `postgres`, `redis`, `mailpit`) each declare `entrypoint`, `init: true`, and a named volume for their data dir. They drop scripts into `/etc/devcontainer-services.d/` and share a dispatcher pattern so multiple servers can be composed in a single container without ordering issues. See each feature's README for "When to use docker-compose instead".
 
 ## Pre-built base image
 
@@ -58,6 +66,9 @@ See [images/base/](images/base) for what's included.
 | [devops](templates/src/devops) | `ghcr.io/alindesign/templates/devops` | Full IaC toolbox: `dotfiles` + `python` + `ansible` + `aws-cli` + `gcloud` + `kubectl` + `opentofu` + `secrets` + mounts |
 | [k8s](templates/src/k8s) | `ghcr.io/alindesign/templates/k8s` | Ubuntu + `dotfiles` + `go` + `kubectl` + `docker-in-docker` + mount `~/.kube` |
 | [data-science](templates/src/data-science) | `ghcr.io/alindesign/templates/data-science` | Ubuntu + `dotfiles` + `python` (uv) + JupyterLab + DuckDB + db-tooling |
+| [php](templates/src/php) | `ghcr.io/alindesign/templates/php` | Ubuntu + `dotfiles` + `php` (Composer) + `db-tooling` |
+| [laravel](templates/src/laravel) | `ghcr.io/alindesign/templates/laravel` | Full Laravel stack: `dotfiles` + `php` (Laravel installer) + `node` + `mysql` + `redis` + `frankenphp` + `mailpit` |
+| [symfony](templates/src/symfony) | `ghcr.io/alindesign/templates/symfony` | Full Symfony stack: `dotfiles` + `php` (Symfony CLI) + `node` + `postgres` + `redis` + `frankenphp` + `mailpit` |
 
 ## Use in a new project
 

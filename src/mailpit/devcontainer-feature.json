@@ -1,0 +1,32 @@
+{
+  "id": "mailpit",
+  "version": "1.0.0",
+  "name": "Mailpit",
+  "description": "Local SMTP catcher with a web UI. Captures all outgoing mail for inspection — essential for testing Symfony Mailer / Laravel Mail / PHPMailer flows without sending real email.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/mailpit",
+  "options": {
+    "version": {
+      "type": "string",
+      "default": "latest",
+      "description": "GitHub release tag (e.g. 'v1.18.0') or 'latest'."
+    },
+    "smtpPort": {
+      "type": "string",
+      "default": "1025",
+      "description": "SMTP listen port."
+    },
+    "uiPort": {
+      "type": "string",
+      "default": "8025",
+      "description": "Web UI listen port."
+    }
+  },
+  "entrypoint": "/usr/local/share/mailpit-init.sh",
+  "init": true,
+  "containerEnv": {
+    "MAIL_HOST": "127.0.0.1",
+    "MAIL_PORT": "1025",
+    "MAIL_MAILER": "smtp"
+  },
+  "installsAfter": ["ghcr.io/devcontainers/features/common-utils"]
+}

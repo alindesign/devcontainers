@@ -1,0 +1,41 @@
+{
+  "id": "laravel",
+  "version": "1.0.0",
+  "name": "Laravel (alindesign)",
+  "description": "Full Laravel dev stack: dotfiles + PHP (with Laravel installer) + MySQL + Redis + FrankenPHP + Mailpit + Node (for Vite). Servers run in-container via the shared services dispatcher.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/laravel",
+  "options": {
+    "phpVersion": {
+      "type": "string",
+      "default": "8.4",
+      "proposals": ["8.5", "8.4", "8.3"],
+      "description": "PHP version."
+    },
+    "nodeVersion": {
+      "type": "string",
+      "default": "lts",
+      "proposals": ["lts", "latest", "22", "20"],
+      "description": "Node version (for Vite)."
+    },
+    "appDatabase": {
+      "type": "string",
+      "default": "laravel",
+      "description": "Initial MySQL database name."
+    },
+    "appUser": {
+      "type": "string",
+      "default": "laravel",
+      "description": "Initial MySQL user (granted ALL on appDatabase)."
+    },
+    "appPassword": {
+      "type": "string",
+      "default": "laravel",
+      "description": "MySQL password for appUser."
+    },
+    "gitUserName": { "type": "string", "default": "" },
+    "gitUserEmail": { "type": "string", "default": "" }
+  },
+  "platforms": ["php", "laravel"],
+  "publisher": "alindesign",
+  "keywords": ["php", "laravel", "mysql", "redis", "frankenphp", "mailpit", "vite", "dotfiles"]
+}

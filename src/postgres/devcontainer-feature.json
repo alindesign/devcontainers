@@ -1,0 +1,53 @@
+{
+  "id": "postgres",
+  "version": "1.0.0",
+  "name": "PostgreSQL Server",
+  "description": "Installs PostgreSQL (18 by default) via the PGDG repository, persists data via a named volume, and starts the server on container start through the shared services dispatcher.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/postgres",
+  "options": {
+    "version": {
+      "type": "string",
+      "default": "18",
+      "proposals": ["18", "17", "16", "15"],
+      "description": "PostgreSQL major version. PGDG packages 15–18 in parallel."
+    },
+    "rootPassword": {
+      "type": "string",
+      "default": "postgres",
+      "description": "Password for the `postgres` superuser (used for both md5 host auth and local password auth)."
+    },
+    "createDatabase": {
+      "type": "string",
+      "default": "",
+      "description": "Optional initial database to create on first boot."
+    },
+    "createUser": {
+      "type": "string",
+      "default": "",
+      "description": "Optional initial role to create (with CREATEDB + LOGIN)."
+    },
+    "createPassword": {
+      "type": "string",
+      "default": "",
+      "description": "Password for createUser."
+    },
+    "port": {
+      "type": "string",
+      "default": "5432",
+      "description": "TCP port postgres listens on (bind 127.0.0.1)."
+    }
+  },
+  "entrypoint": "/usr/local/share/postgres-init.sh",
+  "init": true,
+  "mounts": [
+    {
+      "source": "postgres-data-${devcontainerId}",
+      "target": "/var/lib/postgresql",
+      "type": "volume"
+    }
+  ],
+  "containerEnv": {
+    "PGHOST": "127.0.0.1"
+  },
+  "installsAfter": ["ghcr.io/devcontainers/features/common-utils"]
+}

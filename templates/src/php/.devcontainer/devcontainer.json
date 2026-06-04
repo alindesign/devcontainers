@@ -1,0 +1,25 @@
+{
+  "name": "PHP (alindesign)",
+  "image": "ghcr.io/alindesign/devcontainer-base:latest",
+  "features": {
+    "ghcr.io/alindesign/features/php:1": {
+      "version": "${templateOption:phpVersion}",
+      "extensions": "${templateOption:phpExtensions}",
+      "installXdebug": "${templateOption:installXdebug}"
+    },
+    "ghcr.io/alindesign/features/db-tooling:1": {}
+  },
+  "remoteUser": "vscode",
+  "postCreateCommand": "bash -c 'gn=\"${templateOption:gitUserName}\"; ge=\"${templateOption:gitUserEmail}\"; [ -n \"$gn\" ] && git config --global user.name \"$gn\"; [ -n \"$ge\" ] && git config --global user.email \"$ge\"; php --version && composer --version'",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "bmewburn.vscode-intelephense-client",
+        "xdebug.php-debug",
+        "xdebug.php-pack",
+        "junstyle.php-cs-fixer",
+        "neilbrayfield.php-docblocker"
+      ]
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "id": "php",
+  "version": "1.0.0",
+  "name": "PHP (alindesign)",
+  "description": "Ubuntu base + alindesign dotfiles + PHP (via Sury) + Composer + db-tooling CLI clients. Add the mysql/postgres/redis/frankenphp/mailpit features individually as needed.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/php",
+  "options": {
+    "phpVersion": {
+      "type": "string",
+      "default": "8.4",
+      "proposals": ["8.5", "8.4", "8.3", "8.2"],
+      "description": "PHP version (passed to the php feature)."
+    },
+    "phpExtensions": {
+      "type": "string",
+      "default": "mbstring intl xml zip gd curl mysql pgsql redis opcache sodium bcmath pcntl gmp",
+      "description": "Space-separated PHP extensions."
+    },
+    "installXdebug": {
+      "type": "boolean",
+      "default": false,
+      "description": "Install Xdebug."
+    },
+    "gitUserName": {
+      "type": "string",
+      "default": "",
+      "description": "git user.name (optional)."
+    },
+    "gitUserEmail": {
+      "type": "string",
+      "default": "",
+      "description": "git user.email (optional)."
+    }
+  },
+  "platforms": ["php"],
+  "publisher": "alindesign",
+  "keywords": ["php", "composer", "sury", "xdebug", "dotfiles"]
+}

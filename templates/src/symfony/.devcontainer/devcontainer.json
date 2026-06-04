@@ -1,0 +1,39 @@
+{
+  "name": "Symfony (alindesign)",
+  "image": "ghcr.io/alindesign/devcontainer-base:latest",
+  "features": {
+    "ghcr.io/alindesign/features/php:1": {
+      "version": "${templateOption:phpVersion}",
+      "extensions": "mbstring intl xml zip gd curl mysql pgsql redis opcache sodium bcmath pcntl gmp",
+      "installComposer": true,
+      "installSymfonyCli": true
+    },
+    "ghcr.io/alindesign/features/node:2": {
+      "version": "${templateOption:nodeVersion}",
+      "packageManager": "pnpm"
+    },
+    "ghcr.io/alindesign/features/postgres:1": {
+      "createDatabase": "${templateOption:appDatabase}",
+      "createUser": "${templateOption:appUser}",
+      "createPassword": "${templateOption:appPassword}"
+    },
+    "ghcr.io/alindesign/features/redis:1": {},
+    "ghcr.io/alindesign/features/frankenphp:1": {},
+    "ghcr.io/alindesign/features/mailpit:1": {},
+    "ghcr.io/alindesign/features/db-tooling:1": {}
+  },
+  "remoteUser": "vscode",
+  "forwardPorts": [8000, 8025],
+  "postCreateCommand": "bash -c 'gn=\"${templateOption:gitUserName}\"; ge=\"${templateOption:gitUserEmail}\"; [ -n \"$gn\" ] && git config --global user.name \"$gn\"; [ -n \"$ge\" ] && git config --global user.email \"$ge\"; php --version && composer --version && symfony version && frankenphp version'",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "bmewburn.vscode-intelephense-client",
+        "xdebug.php-debug",
+        "xdebug.php-pack",
+        "TheNouillet.symfony-vscode",
+        "junstyle.php-cs-fixer"
+      ]
+    }
+  }
+}

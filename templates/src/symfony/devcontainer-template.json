@@ -1,0 +1,41 @@
+{
+  "id": "symfony",
+  "version": "1.0.0",
+  "name": "Symfony (alindesign)",
+  "description": "Full Symfony dev stack: dotfiles + PHP (with Symfony CLI) + PostgreSQL + Redis + FrankenPHP + Mailpit + Node (for Webpack Encore / AssetMapper). Servers run in-container via the shared services dispatcher.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/templates/src/symfony",
+  "options": {
+    "phpVersion": {
+      "type": "string",
+      "default": "8.4",
+      "proposals": ["8.5", "8.4", "8.3"],
+      "description": "PHP version."
+    },
+    "nodeVersion": {
+      "type": "string",
+      "default": "lts",
+      "proposals": ["lts", "latest", "22", "20"],
+      "description": "Node version (Webpack Encore / AssetMapper)."
+    },
+    "appDatabase": {
+      "type": "string",
+      "default": "symfony",
+      "description": "Initial PostgreSQL database name."
+    },
+    "appUser": {
+      "type": "string",
+      "default": "symfony",
+      "description": "Initial PostgreSQL role (LOGIN + CREATEDB)."
+    },
+    "appPassword": {
+      "type": "string",
+      "default": "symfony",
+      "description": "PostgreSQL password for appUser."
+    },
+    "gitUserName": { "type": "string", "default": "" },
+    "gitUserEmail": { "type": "string", "default": "" }
+  },
+  "platforms": ["php", "symfony"],
+  "publisher": "alindesign",
+  "keywords": ["php", "symfony", "postgres", "redis", "frankenphp", "mailpit", "dotfiles"]
+}

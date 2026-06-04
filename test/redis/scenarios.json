@@ -1,0 +1,18 @@
+{
+  "test": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "remoteUser": "vscode",
+    "features": {
+      "redis": {}
+    }
+  },
+  "with-password": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "remoteUser": "vscode",
+    "features": {
+      "redis": {
+        "password": "s3cr3t"
+      }
+    }
+  }
+}

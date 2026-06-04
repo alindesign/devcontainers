@@ -1,0 +1,38 @@
+{
+  "id": "redis",
+  "version": "1.0.0",
+  "name": "Redis Server",
+  "description": "Installs Redis server (8.x by default, from Redis' official APT repo) or its BSD-3 fork Valkey, persists data via a named volume, and starts the daemon on container boot through the shared services dispatcher.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/redis",
+  "options": {
+    "variant": {
+      "type": "string",
+      "default": "redis",
+      "enum": ["redis", "valkey"],
+      "description": "Use upstream Redis (AGPLv3) or its drop-in BSD-3 fork Valkey."
+    },
+    "password": {
+      "type": "string",
+      "default": "",
+      "description": "Optional `requirepass`. Empty disables auth (recommended for dev)."
+    },
+    "port": {
+      "type": "string",
+      "default": "6379",
+      "description": "TCP port (bind 127.0.0.1)."
+    }
+  },
+  "entrypoint": "/usr/local/share/redis-init.sh",
+  "init": true,
+  "mounts": [
+    {
+      "source": "redis-data-${devcontainerId}",
+      "target": "/var/lib/redis",
+      "type": "volume"
+    }
+  ],
+  "containerEnv": {
+    "REDIS_HOST": "127.0.0.1"
+  },
+  "installsAfter": ["ghcr.io/devcontainers/features/common-utils"]
+}

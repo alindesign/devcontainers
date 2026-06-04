@@ -1,0 +1,55 @@
+{
+  "id": "php",
+  "version": "1.0.0",
+  "name": "PHP",
+  "description": "PHP via the Sury repository (packages.sury.org), with Composer, common extensions, and opt-in Xdebug / FPM / Symfony CLI / Laravel installer.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/php",
+  "options": {
+    "version": {
+      "type": "string",
+      "default": "8.4",
+      "proposals": ["8.5", "8.4", "8.3", "8.2", "8.1"],
+      "description": "PHP major.minor. Sury publishes 8.1 through 8.5 (and beyond) co-installable."
+    },
+    "extensions": {
+      "type": "string",
+      "default": "mbstring intl xml zip gd curl mysql pgsql redis opcache sodium bcmath pcntl gmp",
+      "description": "Space-separated extension list. Each becomes `php<version>-<ext>` via apt (or `php-imagick` for the non-versioned ones)."
+    },
+    "installComposer": {
+      "type": "boolean",
+      "default": true,
+      "description": "Install Composer 2 to /usr/local/bin/composer via the official installer (with hash verification)."
+    },
+    "installXdebug": {
+      "type": "boolean",
+      "default": false,
+      "description": "Install the Xdebug extension (php<version>-xdebug)."
+    },
+    "installFpm": {
+      "type": "boolean",
+      "default": false,
+      "description": "Install php-fpm and configure the default pool to run as the remote user."
+    },
+    "installSymfonyCli": {
+      "type": "boolean",
+      "default": false,
+      "description": "Install the Symfony CLI to /usr/local/bin/symfony."
+    },
+    "installLaravelInstaller": {
+      "type": "boolean",
+      "default": false,
+      "description": "Install laravel/installer globally via Composer. Requires installComposer=true."
+    },
+    "composerPackages": {
+      "type": "string",
+      "default": "",
+      "description": "Space-separated extra global Composer packages (e.g. 'phpstan/phpstan friendsofphp/php-cs-fixer')."
+    }
+  },
+  "containerEnv": {
+    "COMPOSER_ALLOW_SUPERUSER": "1",
+    "COMPOSER_HOME": "/usr/local/share/composer"
+  },
+  "installsAfter": ["ghcr.io/devcontainers/features/common-utils"]
+}

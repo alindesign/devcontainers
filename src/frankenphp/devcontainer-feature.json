@@ -1,0 +1,18 @@
+{
+  "id": "frankenphp",
+  "version": "1.0.0",
+  "name": "FrankenPHP",
+  "description": "Installs FrankenPHP (Caddy + embedded PHP) as a single static binary from the official GitHub releases. Complements `php` but is independent — FrankenPHP embeds its own PHP runtime.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/frankenphp",
+  "options": {
+    "version": {
+      "type": "string",
+      "default": "latest",
+      "description": "GitHub release tag (e.g. 'v1.11.3') or 'latest'."
+    }
+  },
+  "installsAfter": [
+    "ghcr.io/devcontainers/features/common-utils",
+    "ghcr.io/alindesign/features/php"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "test": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "remoteUser": "vscode",
+    "features": {
+      "mysql": {
+        "createDatabase": "appdb",
+        "createUser": "appuser",
+        "createPassword": "apppass"
+      }
+    }
+  }
+}

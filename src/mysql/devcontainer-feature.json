@@ -1,0 +1,53 @@
+{
+  "id": "mysql",
+  "version": "1.0.0",
+  "name": "MySQL Server",
+  "description": "Installs MySQL Community Server (8.4 LTS by default) inside the container via Oracle's APT repository, persists data via a named volume, and starts mysqld on container start through a shared services dispatcher.",
+  "documentationURL": "https://github.com/alindesign/devcontainers/tree/main/src/mysql",
+  "options": {
+    "version": {
+      "type": "string",
+      "default": "8.4",
+      "proposals": ["8.4", "8.0", "9.7"],
+      "description": "MySQL version. '8.4' (LTS, supported to 2032), '8.0', or innovation track '9.x'."
+    },
+    "rootPassword": {
+      "type": "string",
+      "default": "",
+      "description": "Empty (default) leaves root authenticated via unix_socket — recommended for dev. Set a string to use password auth."
+    },
+    "createDatabase": {
+      "type": "string",
+      "default": "",
+      "description": "Optional initial database to create on first boot."
+    },
+    "createUser": {
+      "type": "string",
+      "default": "",
+      "description": "Optional initial user to create with ALL PRIVILEGES on createDatabase."
+    },
+    "createPassword": {
+      "type": "string",
+      "default": "",
+      "description": "Password for createUser."
+    },
+    "port": {
+      "type": "string",
+      "default": "3306",
+      "description": "TCP port mysqld listens on (bind 127.0.0.1)."
+    }
+  },
+  "entrypoint": "/usr/local/share/mysql-init.sh",
+  "init": true,
+  "mounts": [
+    {
+      "source": "mysql-data-${devcontainerId}",
+      "target": "/var/lib/mysql",
+      "type": "volume"
+    }
+  ],
+  "containerEnv": {
+    "MYSQL_HOST": "127.0.0.1"
+  },
+  "installsAfter": ["ghcr.io/devcontainers/features/common-utils"]
+}

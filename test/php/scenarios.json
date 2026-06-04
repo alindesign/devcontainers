@@ -1,0 +1,28 @@
+{
+  "test": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "remoteUser": "vscode",
+    "features": {
+      "php": {}
+    }
+  },
+  "with-xdebug-and-fpm": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "remoteUser": "vscode",
+    "features": {
+      "php": {
+        "installXdebug": true,
+        "installFpm": true
+      }
+    }
+  },
+  "with-symfony-cli": {
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "remoteUser": "vscode",
+    "features": {
+      "php": {
+        "installSymfonyCli": true
+      }
+    }
+  }
+}
